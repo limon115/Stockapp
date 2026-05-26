@@ -1,0 +1,6 @@
+{
+  "name": "GlassLog Inventory",
+  "description": "An elite enterprise-grade inventory management application styled with custom liquid glassmorphism in deep slate-black themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
