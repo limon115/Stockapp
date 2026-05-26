@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.InventoryItem
 import com.example.ui.theme.*
 import java.text.DecimalFormat
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -64,6 +65,32 @@ fun InventoryDashboardScreen(
     var newStockString by remember { mutableStateOf("5") }
     var newCostString by remember { mutableStateOf("10.00") }
     var newThresholdString by remember { mutableStateOf("2") }
+
+    val coroutineScope = rememberCoroutineScope()
+    var isSuggestionsLoading by remember { mutableStateOf(false) }
+    var suggestionExplanation by remember { mutableStateOf<String?>(null) }
+    var suggestionHasAiIntelligence by remember { mutableStateOf(true) }
+
+    fun fetchAiSuggestions(skuCode: String) {
+        val trimmed = skuCode.trim()
+        if (trimmed.isEmpty()) return
+        isSuggestionsLoading = true
+        suggestionExplanation = null
+        coroutineScope.launch {
+            try {
+                val result = GeminiClient.suggestProductForSku(trimmed)
+                newName = result.name
+                newCategory = result.category
+                newCostString = String.format("%.2f", result.cost)
+                suggestionExplanation = result.explanation
+                suggestionHasAiIntelligence = result.hasAiIntelligence
+            } catch (e: Exception) {
+                suggestionExplanation = "Could not fetch suggestions: ${e.message}"
+            } finally {
+                isSuggestionsLoading = false
+            }
+        }
+    }
 
     // Categories list dynamically calculated
     val categories = remember(items) {
@@ -505,6 +532,98 @@ fun InventoryDashboardScreen(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    GlassTextField(
+                                        value = newSku,
+                                        onValueChange = { newSku = it },
+                                        label = "SKU Code / ID",
+                                        placeholder = "e.g. GLASS-X02"
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { fetchAiSuggestions(newSku) },
+                                    enabled = !isSuggestionsLoading && newSku.isNotBlank(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                                }
+                            }
+
+                            // Smart suggestion details or loading status
+                            AnimatedVisibility(
+                                visible = isSuggestionsLoading || !suggestionExplanation.isNullOrBlank(),
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSuggestionsLoading) Color(0x3300E5FF) else if (suggestionHasAiIntelligence) Color(0x1F00E5FF) else Color(0x1F2979FF))
+                                        .border(
+                                            1.dp,
+                                            if (isSuggestionsLoading) NeonCyan.copy(alpha = 0.5f) else if (suggestionHasAiIntelligence) NeonCyan.copy(alpha = 0.3f) else ElectricBlue.copy(alpha = 0.3f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(8.dp)
+                                ) {
+                                    if (isSuggestionsLoading) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(14.dp),
+                                                strokeWidth = 2.dp,
+                                                color = NeonCyan
+                                            )
+                                            Text(
+                                                text = "AI searching typical features for SKU...",
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontSize = 11.sp,
+                                                color = GlassTextPrimary
+                                            )
+                                        }
+                                    } else if (!suggestionExplanation.isNullOrBlank()) {
+                                        Column {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (suggestionHasAiIntelligence) Icons.Default.AutoAwesome else Icons.Default.Info,
+                                                    contentDescription = "Context",
+                                                    tint = if (suggestionHasAiIntelligence) NeonCyan else ElectricBlue,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Text(
+                                                    text = if (suggestionHasAiIntelligence) "AI Suggestion loaded" else "Dynamic Template applied",
+                                                    fontFamily = FontFamily.SansSerif,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 10.sp,
+                                                    color = if (suggestionHasAiIntelligence) NeonCyan else ElectricBlue
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = suggestionExplanation!!,
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontSize = 11.sp,
+                                                color = GlassTextSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             GlassTextField(
                                 value = newName,
                                 onValueChange = { newName = it },
@@ -512,26 +631,12 @@ fun InventoryDashboardScreen(
                                 placeholder = "e.g. Cobalt Lens Glass"
                             )
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                GlassTextField(
-                                    value = newSku,
-                                    onValueChange = { newSku = it },
-                                    label = "SKU Code / ID",
-                                    placeholder = "e.g. GLASS-X02",
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                GlassTextField(
-                                    value = newCategory,
-                                    onValueChange = { newCategory = it },
-                                    label = "Category",
-                                    placeholder = "General",
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
+                            GlassTextField(
+                                value = newCategory,
+                                onValueChange = { newCategory = it },
+                                label = "Category",
+                                placeholder = "General"
+                            )
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

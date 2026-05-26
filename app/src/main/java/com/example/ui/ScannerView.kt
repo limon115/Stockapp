@@ -42,6 +42,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.concurrent.Executors
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -72,6 +73,32 @@ fun ScannerViewScreen(
     // Quick quantity manipulation
     var adjustQtyString by remember { mutableStateOf("1") }
 
+    val coroutineScope = rememberCoroutineScope()
+    var isSuggestionsLoading by remember { mutableStateOf(false) }
+    var suggestionExplanation by remember { mutableStateOf<String?>(null) }
+    var suggestionHasAiIntelligence by remember { mutableStateOf(true) }
+
+    fun fetchAiSuggestions(skuCode: String) {
+        val trimmed = skuCode.trim()
+        if (trimmed.isEmpty()) return
+        isSuggestionsLoading = true
+        suggestionExplanation = null
+        coroutineScope.launch {
+            try {
+                val result = GeminiClient.suggestProductForSku(trimmed)
+                newSkuName = result.name
+                newSkuCategory = result.category
+                newSkuCost = String.format("%.2f", result.cost)
+                suggestionExplanation = result.explanation
+                suggestionHasAiIntelligence = result.hasAiIntelligence
+            } catch (e: Exception) {
+                suggestionExplanation = "Could not fetch suggestions: ${e.message}"
+            } finally {
+                isSuggestionsLoading = false
+            }
+        }
+    }
+
     // Handle barcode matches
     fun handleBarcodeScanned(barcode: String) {
         val trimmed = barcode.trim()
@@ -91,6 +118,7 @@ fun ScannerViewScreen(
                 newSkuThreshold = globalThreshold.toString()
                 showScanDetailsDialog = false
                 showCreateSkuDialog = true
+                fetchAiSuggestions(trimmed)
             }
         }
     }
@@ -392,14 +420,109 @@ fun ScannerViewScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
-                            Text(
-                                text = "Code: $scannedSku",
-                                fontFamily = FontFamily.SansSerif,
-                                fontWeight = FontWeight.Bold,
-                                color = NeonCyan,
-                                fontSize = 13.sp
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Code: $scannedSku",
+                                    fontFamily = FontFamily.SansSerif,
+                                    fontWeight = FontWeight.Bold,
+                                    color = NeonCyan,
+                                    fontSize = 13.sp
+                                )
+                                
+                                TextButton(
+                                    onClick = { fetchAiSuggestions(scannedSku) },
+                                    enabled = !isSuggestionsLoading && scannedSku.isNotBlank()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = "Regenerate AI suggestions",
+                                        tint = if (isSuggestionsLoading) GlassTextSecondary else ElectricBlue,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "AI Suggest",
+                                        fontFamily = FontFamily.SansSerif,
+                                        fontSize = 12.sp,
+                                        color = if (isSuggestionsLoading) GlassTextSecondary else ElectricBlue
+                                    )
+                                }
+                            }
                         }
+                        
+                        // Smart suggestion details or loading status
+                        item {
+                            AnimatedVisibility(
+                                visible = isSuggestionsLoading || !suggestionExplanation.isNullOrBlank(),
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSuggestionsLoading) Color(0x3300E5FF) else if (suggestionHasAiIntelligence) Color(0x1F00E5FF) else Color(0x1F2979FF))
+                                        .border(
+                                            1.dp,
+                                            if (isSuggestionsLoading) NeonCyan.copy(alpha = 0.5f) else if (suggestionHasAiIntelligence) NeonCyan.copy(alpha = 0.3f) else ElectricBlue.copy(alpha = 0.3f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(10.dp)
+                                ) {
+                                    if (isSuggestionsLoading) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = NeonCyan
+                                            )
+                                            Text(
+                                                text = "Analyzing SKU & generating attributes...",
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontSize = 12.sp,
+                                                color = GlassTextPrimary
+                                            )
+                                        }
+                                    } else if (!suggestionExplanation.isNullOrBlank()) {
+                                        Column {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (suggestionHasAiIntelligence) Icons.Default.AutoAwesome else Icons.Default.Info,
+                                                    contentDescription = "Suggestion Context",
+                                                    tint = if (suggestionHasAiIntelligence) NeonCyan else ElectricBlue,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                                Text(
+                                                    text = if (suggestionHasAiIntelligence) "AI Suggestion applied" else "Dynamic Template applied",
+                                                    fontFamily = FontFamily.SansSerif,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 11.sp,
+                                                    color = if (suggestionHasAiIntelligence) NeonCyan else ElectricBlue
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = suggestionExplanation!!,
+                                                fontFamily = FontFamily.SansSerif,
+                                                fontSize = 12.sp,
+                                                color = GlassTextSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         item {
                             GlassTextField(
                                 value = newSkuName,
