@@ -1,4 +1,3 @@
-# Architected by Khalid Hasan Limon
 name: GlassLog Cloud Compilation
 
 on:
@@ -23,8 +22,21 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Generate Gradle Wrapper (Cloud Execution)
+        run: gradle wrapper
+
+      - name: Generate Debug Keystore Dynamically
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
+
       - name: Grant Execute Permissions
         run: chmod +x gradlew || true
 
       - name: Assemble Debug APK with Gradle
         run: ./gradlew assembleDebug --no-daemon
+        
+      - name: Upload GlassLog APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlassLog-Debug-APK
+          path: app/build/outputs/apk/debug/*.apk
