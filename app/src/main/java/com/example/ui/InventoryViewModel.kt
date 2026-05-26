@@ -20,6 +20,29 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     private val _exportMessage = MutableStateFlow<String?>(null)
     val exportMessage: StateFlow<String?> = _exportMessage.asStateFlow()
 
+    // Persistent SharedPreferences for settings
+    private val prefs = application.getSharedPreferences("glasslog_settings", Context.MODE_PRIVATE)
+
+    private val _isDarkMode = MutableStateFlow(prefs.getBoolean("pref_dark_mode", false)) // Default UI is LIGHT mode
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+
+    private val _defaultLowStockThreshold = MutableStateFlow(prefs.getInt("pref_low_stock_threshold", 5))
+    val defaultLowStockThreshold: StateFlow<Int> = _defaultLowStockThreshold.asStateFlow()
+
+    fun setDarkMode(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs.edit().putBoolean("pref_dark_mode", enabled).apply()
+            _isDarkMode.value = enabled
+        }
+    }
+
+    fun setDefaultLowStockThreshold(value: Int) {
+        viewModelScope.launch {
+            prefs.edit().putInt("pref_low_stock_threshold", value).apply()
+            _defaultLowStockThreshold.value = value
+        }
+    }
+
     init {
         val database = AppDatabase.getDatabase(application)
         val dao = database.inventoryDao()
@@ -82,6 +105,18 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             if (item != null) {
                 val updated = item.copy(lowStockThreshold = threshold)
                 repository.updateItem(updated)
+            }
+        }
+    }
+
+    fun applyDefaultThresholdToAll() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val list = inventoryState.value
+            val globalLimit = defaultLowStockThreshold.value
+            list.forEach { item ->
+                if (item.lowStockThreshold != globalLimit) {
+                    repository.updateItem(item.copy(lowStockThreshold = globalLimit))
+                }
             }
         }
     }

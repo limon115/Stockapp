@@ -98,10 +98,10 @@ fun HistoricalGraphScreen(
                 DropdownMenu(
                     expanded = expandedDropdown,
                     onDismissRequest = { expandedDropdown = false },
-                    modifier = Modifier.background(Color(0xFF0F172A))
+                    modifier = Modifier.background(DynamicMenuBackground)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("All Items (Global)", fontFamily = FontFamily.SansSerif, color = Color.White) },
+                        text = { Text("All Items (Global)", fontFamily = FontFamily.SansSerif, color = GlassTextPrimary) },
                         onClick = {
                             selectedItemIndex = -1
                             expandedDropdown = false
@@ -109,7 +109,7 @@ fun HistoricalGraphScreen(
                     )
                     items.forEachIndexed { idx, item ->
                         DropdownMenuItem(
-                            text = { Text("${item.name} (${item.sku})", fontFamily = FontFamily.SansSerif, color = Color.White) },
+                            text = { Text("${item.name} (${item.sku})", fontFamily = FontFamily.SansSerif, color = GlassTextPrimary) },
                             onClick = {
                                 selectedItemIndex = idx
                                 expandedDropdown = false
@@ -334,6 +334,11 @@ fun LineChartCanvas(
         animationSpec = tween(durationMillis = 800),
         label = "line_chart_reveal"
     )
+    
+    val isDark = LocalIsDarkTheme.current
+    val labelColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF475569)
+    val tintColor = if (isDark) Color(0xFF00E5FF) else Color(0xFF0891B2)
+    val dotColor = if (isDark) Color(0xFF2979FF) else Color(0xFF2563EB)
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -381,7 +386,7 @@ fun LineChartCanvas(
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString(yVal.toInt().toString()),
                 style = TextStyle(
-                    color = GlassTextSecondary,
+                    color = labelColor,
                     fontSize = 9.sp,
                     fontFamily = FontFamily.SansSerif
                 )
@@ -436,7 +441,7 @@ fun LineChartCanvas(
             // Draw line curve
             drawPath(
                 path = path,
-                color = NeonCyan,
+                color = tintColor,
                 style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
             )
             
@@ -450,7 +455,7 @@ fun LineChartCanvas(
                     )
                     
                     drawCircle(
-                        color = ElectricBlue,
+                        color = dotColor,
                         radius = 2.dp.toPx(),
                         center = offset
                     )
@@ -465,13 +470,13 @@ fun LineChartCanvas(
         
         val dLabel1 = textMeasurer.measure(
             text = AnnotatedString(firstDateStr),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+            style = TextStyle(color = labelColor, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dLabel1, topLeft = Offset(paddingLeft, height - paddingBottom + 4.dp.toPx()))
         
         val dLabel2 = textMeasurer.measure(
             text = AnnotatedString(lastDateStr),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+            style = TextStyle(color = labelColor, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dLabel2, topLeft = Offset(width - paddingRight - dLabel2.size.width, height - paddingBottom + 4.dp.toPx()))
     }
@@ -483,6 +488,8 @@ fun BarChartCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val isDark = LocalIsDarkTheme.current
+    val labelColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF475569)
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -511,7 +518,7 @@ fun BarChartCanvas(
             )
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString((ratio * maxY).toInt().toString()),
-                style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
+                style = TextStyle(color = labelColor, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
             )
             drawText(
                 textLayoutResult = textLayoutResult,
@@ -555,13 +562,13 @@ fun BarChartCanvas(
         
         val dl1 = textMeasurer.measure(
             text = AnnotatedString(firstLabel),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
+            style = TextStyle(color = labelColor, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dl1, topLeft = Offset(paddingLeft, height - paddingBottom + 4.dp.toPx()))
 
         val dl2 = textMeasurer.measure(
             text = AnnotatedString(lastLabel),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
+            style = TextStyle(color = labelColor, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dl2, topLeft = Offset(width - paddingRight - dl2.size.width, height - paddingBottom + 4.dp.toPx()))
     }

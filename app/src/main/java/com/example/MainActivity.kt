@@ -5,9 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.MainLayoutScreen
+import com.example.ui.InventoryViewModel
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,9 +17,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-                MainLayoutScreen()
+            val viewModel: InventoryViewModel = viewModel()
+            val isDark by viewModel.isDarkMode.collectAsState()
+            MyApplicationTheme(useDarkTheme = isDark) {
+                MainLayoutScreen(viewModel = viewModel)
             }
         }
     }
 }
+

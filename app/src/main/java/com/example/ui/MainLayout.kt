@@ -2,6 +2,7 @@
 package com.example.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.theme.*
 
 enum class ActiveTab {
-    INVENTORY, SCANNER, ANALYTICS
+    INVENTORY, SCANNER, ANALYTICS, SETTINGS
 }
 
 @Composable
@@ -40,8 +42,8 @@ fun MainLayoutScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(Black),
-        containerColor = Black,
+            .background(MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             // Floating Frosted Glass Bottom Navigation Bar
             Box(
@@ -55,7 +57,7 @@ fun MainLayoutScreen(
                     modifier = Modifier
                         .fillMaxWidth(0.95f)
                         .glassmorphic(percentage = 24.dp)
-                        .padding(vertical = 8.dp, horizontal = 16.dp),
+                        .padding(vertical = 8.dp, horizontal = 12.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -79,6 +81,13 @@ fun MainLayoutScreen(
                         isSelected = activeTab == ActiveTab.ANALYTICS,
                         onClick = { activeTab = ActiveTab.ANALYTICS }
                     )
+
+                    TabIconItem(
+                        icon = Icons.Default.Settings,
+                        label = "Settings",
+                        isSelected = activeTab == ActiveTab.SETTINGS,
+                        onClick = { activeTab = ActiveTab.SETTINGS }
+                    )
                 }
             }
         }
@@ -92,7 +101,8 @@ fun MainLayoutScreen(
             AnimatedContent(
                 targetState = activeTab,
                 transitionSpec = {
-                    fadeIn() togetherWith fadeOut()
+                    (fadeIn(animationSpec = spring()) + scaleIn(initialScale = 0.96f)) togetherWith 
+                    (fadeOut(animationSpec = spring()) + scaleOut(targetScale = 0.96f))
                 },
                 label = "panel_view_shift"
             ) { targetTab ->
@@ -108,6 +118,9 @@ fun MainLayoutScreen(
                     ActiveTab.ANALYTICS -> HistoricalGraphScreen(
                         items = items,
                         logs = logs
+                    )
+                    ActiveTab.SETTINGS -> SettingsScreen(
+                        viewModel = viewModel
                     )
                 }
             }
@@ -133,7 +146,7 @@ fun RowScope.TabIconItem(
             .weight(1f)
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(vertical = 8.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -141,8 +154,8 @@ fun RowScope.TabIconItem(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(16.dp))
-                .background(if (isSelected) Color(0x1A00E5FF) else Color.Transparent)
-                .padding(horizontal = 20.dp, vertical = 4.dp),
+                .background(if (isSelected) activeColor.copy(alpha = 0.15f) else Color.Transparent)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -152,7 +165,7 @@ fun RowScope.TabIconItem(
                 modifier = Modifier.size(20.dp)
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label,
             fontFamily = FontFamily.SansSerif,

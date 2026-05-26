@@ -92,12 +92,12 @@ fun InventoryDashboardScreen(
     }
     
     Scaffold(
-        containerColor = Black,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onNavigateToScanner() },
                 containerColor = NeonCyan,
-                contentColor = Black,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
             ) {
                 Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan Item")
@@ -159,7 +159,7 @@ fun InventoryDashboardScreen(
                             .weight(1.2f)
                             .height(84.dp),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = Color(0xFF111827)
+                            containerColor = DynamicCardBackground
                         ),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -194,7 +194,7 @@ fun InventoryDashboardScreen(
                             .weight(0.9f)
                             .height(84.dp),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = Color(0xFF111827)
+                            containerColor = DynamicCardBackground
                         ),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -218,7 +218,7 @@ fun InventoryDashboardScreen(
                                 fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color.White
+                                color = GlassTextPrimary
                             )
                         }
                     }
@@ -229,7 +229,7 @@ fun InventoryDashboardScreen(
                             .weight(0.9f)
                             .height(84.dp),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = Color(0xFF111827)
+                            containerColor = DynamicCardBackground
                         ),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -390,7 +390,7 @@ fun InventoryDashboardScreen(
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = Color(0xFF1E293B)
+                        containerColor = DynamicCardSecondary
                     ),
                     shape = RoundedCornerShape(16.dp)
                 ) {
@@ -643,13 +643,13 @@ fun InventoryDashboardScreen(
                         },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF1E293B),
-                            unfocusedContainerColor = Color(0xFF0F172A),
-                            disabledContainerColor = Color(0xFF0F172A),
+                            focusedContainerColor = DynamicCardSecondary,
+                            unfocusedContainerColor = DynamicMenuBackground,
+                            disabledContainerColor = DynamicMenuBackground,
                             focusedIndicatorColor = NeonCyan,
                             unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedTextColor = GlassTextPrimary,
+                            unfocusedTextColor = GlassTextPrimary,
                             cursorColor = NeonCyan
                         ),
                         shape = RoundedCornerShape(24.dp),
@@ -1014,7 +1014,7 @@ fun InventoryItemRow(
                     Text("CANCEL", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary)
                 }
             },
-            containerColor = Color(0xFF1E293B)
+            containerColor = DynamicCardSecondary
         )
     }
 }

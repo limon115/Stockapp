@@ -55,6 +55,8 @@ fun ScannerViewScreen(
     // Permission Management
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     
+    val globalThreshold by viewModel.defaultLowStockThreshold.collectAsState()
+    
     var scannedSku by remember { mutableStateOf("") }
     var activeScannedItem by remember { mutableStateOf<InventoryItem?>(null) }
     var showScanDetailsDialog by remember { mutableStateOf(false) }
@@ -65,7 +67,7 @@ fun ScannerViewScreen(
     var newSkuCategory by remember { mutableStateOf("Electronics") }
     var newSkuStock by remember { mutableStateOf("10") }
     var newSkuCost by remember { mutableStateOf("25.00") }
-    var newSkuThreshold by remember { mutableStateOf("2") }
+    var newSkuThreshold by remember(globalThreshold) { mutableStateOf(globalThreshold.toString()) }
 
     // Quick quantity manipulation
     var adjustQtyString by remember { mutableStateOf("1") }
@@ -86,7 +88,7 @@ fun ScannerViewScreen(
                 newSkuCost = "15.00"
                 newSkuStock = "5"
                 newSkuCategory = "General"
-                newSkuThreshold = "2"
+                newSkuThreshold = globalThreshold.toString()
                 showScanDetailsDialog = false
                 showCreateSkuDialog = true
             }
@@ -94,7 +96,7 @@ fun ScannerViewScreen(
     }
 
     Scaffold(
-        containerColor = Black
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -127,7 +129,7 @@ fun ScannerViewScreen(
                         onClick = { cameraPermissionState.launchPermissionRequest() },
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
                     ) {
-                        Text("Grant Camera Permission", color = Black, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
+                        Text("Grant Camera Permission", color = MaterialTheme.colorScheme.onPrimary, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -216,7 +218,7 @@ fun ScannerViewScreen(
                         },
                         colors = IconButtonDefaults.iconButtonColors(containerColor = NeonCyan)
                     ) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Simulate Scan", tint = Black)
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Simulate Scan", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
                 
@@ -274,7 +276,7 @@ fun ScannerViewScreen(
             val item = activeScannedItem!!
             AlertDialog(
                 onDismissRequest = { showScanDetailsDialog = false; scannedSku = "" },
-                containerColor = Color(0xFF0F172A),
+                containerColor = DynamicMenuBackground,
                 title = {
                     Text(
                         text = "SKU MATCH: ${item.name}",
@@ -310,7 +312,7 @@ fun ScannerViewScreen(
                             text = "Current Stock Level: ${item.currentStock} units",
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = GlassTextPrimary,
                             fontSize = 15.sp
                         )
                         
@@ -360,7 +362,7 @@ fun ScannerViewScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Restock (+)", color = Black, fontFamily = FontFamily.SansSerif)
+                            Text("Restock (+)", color = Color.White, fontFamily = FontFamily.SansSerif)
                         }
                     }
                 },
@@ -376,7 +378,7 @@ fun ScannerViewScreen(
         if (showCreateSkuDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateSkuDialog = false; scannedSku = "" },
-                containerColor = Color(0xFF0F172A),
+                containerColor = DynamicMenuBackground,
                 title = {
                     Text(
                         text = "NEW SKU DETECTED",
@@ -470,7 +472,7 @@ fun ScannerViewScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
                     ) {
-                        Text("Register Item", color = Black, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
+                        Text("Register Item", color = MaterialTheme.colorScheme.onPrimary, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {

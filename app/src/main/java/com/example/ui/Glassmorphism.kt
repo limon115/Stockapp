@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.composed
 import com.example.ui.theme.GlassBorderColor
 import com.example.ui.theme.GlassWhite
 import com.example.ui.theme.GlassWhiteSubtle
@@ -32,30 +33,36 @@ fun Modifier.glassmorphic(
     cornerRadius: Dp = 16.dp,
     borderWidth: Dp = 1.dp,
     borderColor: Color? = null
-): Modifier = this
-    .clip(RoundedCornerShape(cornerRadius))
-    .background(
-        Brush.verticalGradient(
-            colors = listOf(
-                GlassWhite,
-                GlassWhiteSubtle
-            )
-        )
-    )
-    .border(
-        width = borderWidth,
-        brush = if (borderColor != null) {
-            androidx.compose.ui.graphics.SolidColor(borderColor)
-        } else {
+): Modifier = this.composed {
+    val glassWhite = GlassWhite
+    val glassWhiteSubtle = GlassWhiteSubtle
+    val glassBorderColor = GlassBorderColor
+
+    this
+        .clip(RoundedCornerShape(cornerRadius))
+        .background(
             Brush.verticalGradient(
                 colors = listOf(
-                    GlassBorderColor,
-                    Color(0x0AFFFFFF)
+                    glassWhite,
+                    glassWhiteSubtle
                 )
             )
-        },
-        shape = RoundedCornerShape(cornerRadius)
-    )
+        )
+        .border(
+            width = borderWidth,
+            brush = if (borderColor != null) {
+                androidx.compose.ui.graphics.SolidColor(borderColor)
+            } else {
+                Brush.verticalGradient(
+                    colors = listOf(
+                        glassBorderColor,
+                        Color(0x0AFFFFFF)
+                    )
+                )
+            },
+            shape = RoundedCornerShape(cornerRadius)
+        )
+}
 
 @Composable
 fun GlassCard(
@@ -130,6 +137,7 @@ fun GlassLogLogo(
     modifier: Modifier = Modifier,
     size: Dp = 48.dp
 ) {
+    val localNeonCyan = NeonCyan
     Box(
         modifier = modifier
             .size(size)
@@ -140,7 +148,7 @@ fun GlassLogLogo(
         androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
             val scaleR = size.toPx()
             drawCircle(
-                color = NeonCyan.copy(alpha = 0.18f),
+                color = localNeonCyan.copy(alpha = 0.18f),
                 radius = scaleR * 0.45f,
                 center = center
             )
@@ -153,7 +161,7 @@ fun GlassLogLogo(
                 .glassmorphic(
                     cornerRadius = (size.value * 0.25f).dp,
                     borderWidth = 1.dp,
-                    borderColor = NeonCyan.copy(alpha = 0.4f)
+                    borderColor = localNeonCyan.copy(alpha = 0.4f)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -209,7 +217,7 @@ fun GlassLogLogo(
                 
                 drawPath(
                     path = laserPath,
-                    color = NeonCyan,
+                    color = localNeonCyan,
                     style = Stroke(
                         width = 1.8.dp.toPx(),
                         cap = StrokeCap.Round,
