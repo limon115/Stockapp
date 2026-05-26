@@ -27,12 +27,16 @@ jobs:
       - name: Generate Cloud Wrapper
         run: gradle wrapper
 
-      - name: 🔐 Carpet-Bomb API Key Injection (.env & local.properties)
+      - name: 🔐 Carpet-Bomb API Key Injection (Java Syntax Fix)
         env:
           SECRET_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "GEMINI_API_KEY=$SECRET_KEY" > local.properties
-          echo "GEMINI_API_KEY=$SECRET_KEY" > .env
+          # 1. Fallback to placeholder string if the GitHub Secret is empty
+          SAFE_KEY="${SECRET_KEY:-MY_GEMINI_API_KEY}"
+          
+          # 2. Wrap in escaped quotes so Java compiles it as a valid String literal
+          echo "GEMINI_API_KEY=\"$SAFE_KEY\"" > local.properties
+          echo "GEMINI_API_KEY=\"$SAFE_KEY\"" > .env
 
       - name: Forge Debug Keystore
         run: |
