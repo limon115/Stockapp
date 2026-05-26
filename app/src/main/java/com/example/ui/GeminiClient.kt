@@ -86,7 +86,7 @@ object GeminiClient {
         val prompt = """
             You are an expert commercial retail lookup system.
             We have scanned or entered a barcode/SKU with the code: "$trimmedSku".
-            Your task is to predict or synthesize an extremely realistic product name, industry-standard category, suggested wholesale item cost (floating-point double in Bangladesh Taka/BDT), and a 1-sentence brand contextual explanation of why this product fits this SKU.
+            Your task is to identify the exact real-world product for this barcode. If you DO NOT know the exact product, DO NOT guess or invent one. Instead, return name: "Unknown SKU", category: "Manual Entry Required", cost: 0.0, and explanation: "Barcode not recognized by AI."
             
             Respond only with a single, valid JSON object in the exact structure below. Avoid markdown, wrap, trailing commas, or any extra text.
             {
