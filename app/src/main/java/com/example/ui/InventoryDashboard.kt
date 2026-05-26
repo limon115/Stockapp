@@ -7,9 +7,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -137,7 +139,7 @@ fun InventoryDashboardScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = if (showManualRegisterForm) "Close" else "Manual Override",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -145,73 +147,115 @@ fun InventoryDashboardScreen(
                 }
             }
 
-            // 2. Statistics Grid
+            // 2. Statistics Grid Redesigned as modern Material 3 Elevated Cards
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Global valuation
-                    GlassCard(
-                        modifier = Modifier.weight(1.3f)
+                    // Global valuation Elevated Card
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .height(84.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = Color(0xFF111827)
+                        ),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            text = "TOTAL VALUATION",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 10.sp,
-                            color = GlassTextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "৳${DecimalFormat("#,##0.00").format(totalValuation)}",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = NeonCyan
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "TOTAL VALUATION",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                color = GlassTextSecondary,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = "৳${DecimalFormat("#,##0.00").format(totalValuation)}",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                color = NeonCyan
+                            )
+                        }
                     }
                     
-                    // Total count
-                    GlassCard(
-                        modifier = Modifier.weight(0.9f)
+                    // Total Unique SKUs Elevated Card
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(0.9f)
+                            .height(84.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = Color(0xFF111827)
+                        ),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            text = "UNIQUE SKUS",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 10.sp,
-                            color = GlassTextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "$totalItemsCount entries",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "UNIQUE SKUS",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                color = GlassTextSecondary,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = "$totalItemsCount entries",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                     
-                    // Total Stock Units
-                    GlassCard(
-                        modifier = Modifier.weight(0.9f)
+                    // Total Stock Units Elevated Card
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(0.9f)
+                            .height(84.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = Color(0xFF111827)
+                        ),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(
-                            text = "TOTAL UNITS",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 10.sp,
-                            color = GlassTextSecondary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "$totalStockUnits items",
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = ElectricBlue
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "TOTAL UNITS",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp,
+                                color = GlassTextSecondary,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = "$totalStockUnits items",
+                                fontFamily = FontFamily.SansSerif,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = ElectricBlue
+                            )
+                        }
                     }
                 }
             }
@@ -245,7 +289,7 @@ fun InventoryDashboardScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "CRITICAL STOCK ALERT",
-                                        fontFamily = FontFamily.Serif,
+                                        fontFamily = FontFamily.SansSerif,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         color = Color(0xFFFFB74D),
@@ -262,7 +306,7 @@ fun InventoryDashboardScreen(
                                 ) {
                                     Text(
                                         text = "${lowStockItems.size} SKUs Low",
-                                        fontFamily = FontFamily.Serif,
+                                        fontFamily = FontFamily.SansSerif,
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFFFFB74D)
@@ -289,7 +333,7 @@ fun InventoryDashboardScreen(
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = lowItem.name,
-                                                fontFamily = FontFamily.Serif,
+                                                fontFamily = FontFamily.SansSerif,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 13.sp,
                                                 color = Color.White
@@ -298,14 +342,14 @@ fun InventoryDashboardScreen(
                                             Row {
                                                 Text(
                                                     text = "SKU: ${lowItem.sku}",
-                                                    fontFamily = FontFamily.Serif,
+                                                    fontFamily = FontFamily.SansSerif,
                                                     fontSize = 10.sp,
                                                     color = GlassTextSecondary
                                                 )
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
                                                     text = if (isOutOfStock) "OUT OF STOCK" else "${lowItem.currentStock} units remaining",
-                                                    fontFamily = FontFamily.Serif,
+                                                    fontFamily = FontFamily.SansSerif,
                                                     fontSize = 10.sp,
                                                     color = if (isOutOfStock) AccentRed else Color(0xFFFFB74D),
                                                     fontWeight = FontWeight.SemiBold
@@ -327,7 +371,7 @@ fun InventoryDashboardScreen(
                                         ) {
                                             Text(
                                                 text = "RESTOCK +10",
-                                                fontFamily = FontFamily.Serif,
+                                                fontFamily = FontFamily.SansSerif,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = NeonCyan
@@ -343,45 +387,95 @@ fun InventoryDashboardScreen(
 
             // 3. Document Extraction Suite (Enterprise PDF / CSV exports)
             item {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth()
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = Color(0xFF1E293B)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = "ENTERPRISE DOCUMENT EXPORT ENGINE",
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = ElectricBlue
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Button(
-                            onClick = { viewModel.triggerCsvExport(context) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0x22FFFFFF)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .border(1.dp, GlassBorderColor, RoundedCornerShape(8.dp)),
-                            contentPadding = PaddingValues(vertical = 12.dp)
+                        Text(
+                            text = "ENTERPRISE DOCUMENT EXPORT ENGINE",
+                            fontFamily = FontFamily.SansSerif,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = NeonCyan,
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Icon(Icons.Default.UploadFile, contentDescription = "CSV", tint = NeonCyan)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Export CSV Ledger", fontFamily = FontFamily.Serif, fontSize = 11.sp, color = GlassTextPrimary)
-                        }
+                            // CSV Button (Distinct Outlined/Glass component with crisp vector icons)
+                            Button(
+                                onClick = { viewModel.triggerCsvExport(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0x1BFFFFFF)
+                                ),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .border(1.dp, NeonCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
+                                contentPadding = PaddingValues(horizontal = 12.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = "Export CSV",
+                                        tint = NeonCyan,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Export CSV",
+                                        fontFamily = FontFamily.SansSerif,
+                                        fontSize = 12.sp,
+                                        color = NeonCyan,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
 
-                        Button(
-                            onClick = { viewModel.triggerPdfExport(context) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0x3300E5FF)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(vertical = 12.dp)
-                        ) {
-                            Icon(Icons.Default.Download, contentDescription = "PDF", tint = Black)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Render PDF Report", fontFamily = FontFamily.Serif, fontSize = 11.sp, color = Black, fontWeight = FontWeight.Bold)
+                            // PDF Button (Distinct high contrast component with down-arrow)
+                            Button(
+                                onClick = { viewModel.triggerPdfExport(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = NeonCyan
+                                ),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDownward,
+                                        contentDescription = "Render PDF",
+                                        tint = Black,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Render PDF",
+                                        fontFamily = FontFamily.SansSerif,
+                                        fontSize = 12.sp,
+                                        color = Black,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -401,7 +495,7 @@ fun InventoryDashboardScreen(
                     ) {
                         Text(
                             text = "MANUAL REGISTRATION OVERRIDE",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp,
                             color = NeonCyan
@@ -503,47 +597,93 @@ fun InventoryDashboardScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("REGISTER PRODUCT", fontFamily = FontFamily.Serif, color = Black, fontWeight = FontWeight.Bold)
+                                Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = Black, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
             }
 
-            // 5. Search Bar and Filter
+            // 5. Sleek Material 3 Search Bar
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    GlassTextField(
+                    TextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        label = "Search by Name or SKU...",
-                        modifier = Modifier.weight(1f)
+                        placeholder = { 
+                            Text(
+                                "Search by SKU or item name...", 
+                                fontFamily = FontFamily.SansSerif, 
+                                color = GlassTextSecondary,
+                                fontSize = 14.sp
+                            ) 
+                        },
+                        leadingIcon = { 
+                            Icon(
+                                imageVector = Icons.Default.Search, 
+                                contentDescription = "Search", 
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            ) 
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear, 
+                                        contentDescription = "Clear", 
+                                        tint = GlassTextSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF1E293B),
+                            unfocusedContainerColor = Color(0xFF0F172A),
+                            disabledContainerColor = Color(0xFF0F172A),
+                            focusedIndicatorColor = NeonCyan,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = NeonCyan
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .border(1.dp, NeonCyan.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
                     )
                 }
             }
 
-            // Category Horizontal Filters Scroll list
+            // Category Horizontal Filters Scroll list (Sleek, perfect organically rounded "All" chip)
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    categories.take(5).forEach { cat ->
+                    categories.forEach { cat ->
                         val isSelected = selectedCategoryFilter == cat
+                        val chipShape = if (cat == "All") RoundedCornerShape(24.dp) else RoundedCornerShape(12.dp)
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(chipShape)
                                 .background(if (isSelected) Color(0x3300E5FF) else Color(0x0DFFFFFF))
-                                .border(1.dp, if (isSelected) NeonCyan else GlassBorderColor, RoundedCornerShape(8.dp))
+                                .border(1.dp, if (isSelected) NeonCyan else GlassBorderColor, chipShape)
                                 .clickable { selectedCategoryFilter = cat }
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = cat,
-                                fontFamily = FontFamily.Serif,
+                                fontFamily = FontFamily.SansSerif,
                                 fontSize = 11.sp,
                                 color = if (isSelected) NeonCyan else GlassTextSecondary,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -564,7 +704,7 @@ fun InventoryDashboardScreen(
                     ) {
                         Icon(Icons.Default.Info, contentDescription = "Empty Ledger", tint = Color(0x33FFFFFF), modifier = Modifier.size(32.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No stock matches found", fontFamily = FontFamily.Serif, color = GlassTextSecondary, fontSize = 12.sp)
+                        Text("No stock matches found", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary, fontSize = 12.sp)
                     }
                 }
             } else {
@@ -599,14 +739,14 @@ fun InventoryDashboardScreen(
                 ) {
                     Text(
                         text = "Developed by Khalid Hasan Limon",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal,
                         fontSize = 11.sp,
                         color = GlassTextSecondary
                     )
                     Text(
                         text = "Polwel OS Enterprise Edition",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal,
                         fontSize = 9.sp,
                         color = Color(0x33FFFFFF)
@@ -666,7 +806,7 @@ fun InventoryItemRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = item.name,
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White
@@ -681,7 +821,7 @@ fun InventoryItemRow(
                     ) {
                         Text(
                             text = badgeText,
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = badgeColor
@@ -696,20 +836,20 @@ fun InventoryItemRow(
                 ) {
                     Text(
                         text = "SKU: ${item.sku}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = GlassTextSecondary
                     )
                     Text(
                         text = "Category: ${item.category}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = GlassTextSecondary
                     )
                     // Added visual indicator of the alert threshold
                     Text(
                         text = "Alert: ≤${item.lowStockThreshold}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = if (isLow) Color(0xFFFFB74D) else GlassTextSecondary
                     )
@@ -722,13 +862,13 @@ fun InventoryItemRow(
                 ) {
                     Text(
                         text = "Cost: ৳${String.format("%.2f", item.cost)}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = Color(0x88FFFFFF)
                     )
                     Text(
                         text = "Value: ৳${String.format("%.2f", item.currentStock * item.cost)}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = NeonCyan,
                         fontWeight = FontWeight.Bold
@@ -763,7 +903,7 @@ fun InventoryItemRow(
                 // Physical value
                 Text(
                     text = item.currentStock.toString(),
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 17.sp,
                     color = Color.White,
@@ -806,7 +946,7 @@ fun InventoryItemRow(
                         modifier = Modifier.background(Color(0xFF0F172A))
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Set Alert Limit", fontFamily = FontFamily.Serif, color = Color.White) },
+                            text = { Text("Set Alert Limit", fontFamily = FontFamily.SansSerif, color = Color.White) },
                             leadingIcon = { Icon(Icons.Default.Warning, contentDescription = "Threshold", tint = Color(0xFFFFB74D)) },
                             onClick = {
                                 inputThreshold = item.lowStockThreshold.toString()
@@ -815,7 +955,7 @@ fun InventoryItemRow(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Delete SKU Entry", fontFamily = FontFamily.Serif, color = AccentRed) },
+                            text = { Text("Delete SKU Entry", fontFamily = FontFamily.SansSerif, color = AccentRed) },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AccentRed) },
                             onClick = {
                                 onDelete()
@@ -834,7 +974,7 @@ fun InventoryItemRow(
             title = {
                 Text(
                     text = "Custom Alert limit",
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -843,7 +983,7 @@ fun InventoryItemRow(
                 Column {
                     Text(
                         text = "Set custom low-stock threshold for ${item.name}. Alert is active when current stock is equal to or below this value.",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 12.sp,
                         color = GlassTextSecondary
                     )
@@ -866,12 +1006,12 @@ fun InventoryItemRow(
                         }
                     }
                 ) {
-                    Text("SAVE", fontFamily = FontFamily.Serif, color = NeonCyan, fontWeight = FontWeight.Bold)
+                    Text("SAVE", fontFamily = FontFamily.SansSerif, color = NeonCyan, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showThresholdDialog = false }) {
-                    Text("CANCEL", fontFamily = FontFamily.Serif, color = GlassTextSecondary)
+                    Text("CANCEL", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary)
                 }
             },
             containerColor = Color(0xFF1E293B)

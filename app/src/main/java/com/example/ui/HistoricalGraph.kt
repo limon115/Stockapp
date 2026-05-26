@@ -89,7 +89,7 @@ fun HistoricalGraphScreen(
             ) {
                 Text(
                     text = activeItem?.name ?: "All Items (Global Logs)",
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontSize = 13.sp,
                     color = NeonCyan,
                     fontWeight = FontWeight.Bold
@@ -101,7 +101,7 @@ fun HistoricalGraphScreen(
                     modifier = Modifier.background(Color(0xFF0F172A))
                 ) {
                     DropdownMenuItem(
-                        text = { Text("All Items (Global)", fontFamily = FontFamily.Serif, color = Color.White) },
+                        text = { Text("All Items (Global)", fontFamily = FontFamily.SansSerif, color = Color.White) },
                         onClick = {
                             selectedItemIndex = -1
                             expandedDropdown = false
@@ -109,7 +109,7 @@ fun HistoricalGraphScreen(
                     )
                     items.forEachIndexed { idx, item ->
                         DropdownMenuItem(
-                            text = { Text("${item.name} (${item.sku})", fontFamily = FontFamily.Serif, color = Color.White) },
+                            text = { Text("${item.name} (${item.sku})", fontFamily = FontFamily.SansSerif, color = Color.White) },
                             onClick = {
                                 selectedItemIndex = idx
                                 expandedDropdown = false
@@ -142,7 +142,7 @@ fun HistoricalGraphScreen(
                     ) {
                         Text(
                             text = tf.split(" ")[0],
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontSize = 11.sp,
                             color = if (isSelected) NeonCyan else GlassTextSecondary,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -168,13 +168,13 @@ fun HistoricalGraphScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "RESTOCKED (IN)",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 10.sp,
                         color = GlassTextSecondary
                     )
                     Text(
                         text = "+$totalIn units",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 18.sp,
                         color = AccentGreen,
                         fontWeight = FontWeight.Bold
@@ -191,13 +191,13 @@ fun HistoricalGraphScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "DEDUCTED (OUT)",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 10.sp,
                         color = GlassTextSecondary
                     )
                     Text(
                         text = "-$totalOut units",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 18.sp,
                         color = AccentRed,
                         fontWeight = FontWeight.Bold
@@ -215,7 +215,7 @@ fun HistoricalGraphScreen(
         ) {
             Text(
                 text = "Chart Style: ",
-                fontFamily = FontFamily.Serif,
+                fontFamily = FontFamily.SansSerif,
                 fontSize = 11.sp,
                 color = GlassTextSecondary
             )
@@ -229,7 +229,7 @@ fun HistoricalGraphScreen(
                     val isSelected = chartType == type
                     Text(
                         text = type,
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
                         color = if (isSelected) NeonCyan else GlassTextSecondary,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
@@ -262,14 +262,14 @@ fun HistoricalGraphScreen(
                 ) {
                     Text(
                         text = "No stock transactions recorded for this interval",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         color = GlassTextSecondary,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Adjust item stock to trigger velocity graphs",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         color = Color(0x33FFFFFF),
                         fontSize = 11.sp
                     )
@@ -315,7 +315,7 @@ fun HistoricalGraphScreen(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Developed by Khalid Hasan Limon",
-            fontFamily = FontFamily.Serif,
+            fontFamily = FontFamily.SansSerif,
             fontSize = 10.sp,
             color = Color(0x44FFFFFF),
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -383,7 +383,7 @@ fun LineChartCanvas(
                 style = TextStyle(
                     color = GlassTextSecondary,
                     fontSize = 9.sp,
-                    fontFamily = FontFamily.Serif
+                    fontFamily = FontFamily.SansSerif
                 )
             )
             drawText(
@@ -465,13 +465,13 @@ fun LineChartCanvas(
         
         val dLabel1 = textMeasurer.measure(
             text = AnnotatedString(firstDateStr),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Serif)
+            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dLabel1, topLeft = Offset(paddingLeft, height - paddingBottom + 4.dp.toPx()))
         
         val dLabel2 = textMeasurer.measure(
             text = AnnotatedString(lastDateStr),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Serif)
+            style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dLabel2, topLeft = Offset(width - paddingRight - dLabel2.size.width, height - paddingBottom + 4.dp.toPx()))
     }
@@ -511,7 +511,7 @@ fun BarChartCanvas(
             )
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString((ratio * maxY).toInt().toString()),
-                style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.Serif)
+                style = TextStyle(color = GlassTextSecondary, fontSize = 9.sp, fontFamily = FontFamily.SansSerif)
             )
             drawText(
                 textLayoutResult = textLayoutResult,
@@ -555,13 +555,13 @@ fun BarChartCanvas(
         
         val dl1 = textMeasurer.measure(
             text = AnnotatedString(firstLabel),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Serif)
+            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dl1, topLeft = Offset(paddingLeft, height - paddingBottom + 4.dp.toPx()))
 
         val dl2 = textMeasurer.measure(
             text = AnnotatedString(lastLabel),
-            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.Serif)
+            style = TextStyle(color = GlassTextSecondary, fontSize = 8.sp, fontFamily = FontFamily.SansSerif)
         )
         drawText(dl2, topLeft = Offset(width - paddingRight - dl2.size.width, height - paddingBottom + 4.dp.toPx()))
     }

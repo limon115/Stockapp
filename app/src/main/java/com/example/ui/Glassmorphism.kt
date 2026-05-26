@@ -93,7 +93,7 @@ fun GlassTextField(
         label = {
             Text(
                 text = label,
-                fontFamily = FontFamily.Serif,
+                fontFamily = FontFamily.SansSerif,
                 color = com.example.ui.theme.GlassTextSecondary,
                 fontSize = 13.sp
             )
@@ -101,7 +101,7 @@ fun GlassTextField(
         placeholder = {
             Text(
                 text = placeholder,
-                fontFamily = FontFamily.Serif,
+                fontFamily = FontFamily.SansSerif,
                 color = Color(0x66FFFFFF),
                 fontSize = 14.sp
             )
@@ -109,7 +109,7 @@ fun GlassTextField(
         keyboardOptions = keyboardOptions,
         singleLine = singleLine,
         textStyle = LocalTextStyle.current.copy(
-            fontFamily = FontFamily.Serif,
+            fontFamily = FontFamily.SansSerif,
             color = com.example.ui.theme.GlassTextPrimary,
             fontSize = 15.sp
         ),
@@ -244,7 +244,7 @@ fun GlassHeader(
         Column {
             Text(
                 text = title,
-                fontFamily = FontFamily.Serif,
+                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 color = NeonCyan,
@@ -254,7 +254,7 @@ fun GlassHeader(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal,
                     fontSize = 13.sp,
                     color = com.example.ui.theme.GlassTextSecondary

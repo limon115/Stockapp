@@ -131,24 +131,33 @@ fun RowScope.TabIconItem(
     Column(
         modifier = Modifier
             .weight(1f)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(vertical = 6.dp),
+            .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) activeColor else inactiveColor,
-            modifier = Modifier.size(22.dp)
-        )
-        Spacer(modifier = Modifier.height(2.dp))
+        // Crisp, high-fidelity active pill highlight container
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(if (isSelected) Color(0x1A00E5FF) else Color.Transparent)
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isSelected) activeColor else inactiveColor,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            fontFamily = FontFamily.Serif,
+            fontFamily = FontFamily.SansSerif,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             color = if (isSelected) activeColor else inactiveColor,
             letterSpacing = 0.5.sp
         )

@@ -118,7 +118,7 @@ fun ScannerViewScreen(
                 ) {
                     Text(
                         text = "Camera access is highly recommended for laser scanner resolve.",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         color = GlassTextSecondary,
                         fontSize = 13.sp
                     )
@@ -127,7 +127,7 @@ fun ScannerViewScreen(
                         onClick = { cameraPermissionState.launchPermissionRequest() },
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
                     ) {
-                        Text("Grant Camera Permission", color = Black, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold)
+                        Text("Grant Camera Permission", color = Black, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -169,7 +169,7 @@ fun ScannerViewScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Live preview unavailable",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontSize = 12.sp,
                             color = GlassTextSecondary
                         )
@@ -182,7 +182,7 @@ fun ScannerViewScreen(
             // Enterprise Manual Simulator Section (MANDATORY fallback to allow testing scanned results inside browser emulator)
             Text(
                 text = "EMULATOR TEST BARCODE PANEL",
-                fontFamily = FontFamily.Serif,
+                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 color = ElectricBlue
@@ -225,7 +225,7 @@ fun ScannerViewScreen(
                 // Demo scan templates
                 Text(
                     text = "Quick Mock Templates:",
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontSize = 11.sp,
                     color = GlassTextSecondary
                 )
@@ -245,7 +245,7 @@ fun ScannerViewScreen(
                         ) {
                             Text(
                                 text = code,
-                                fontFamily = FontFamily.Serif,
+                                fontFamily = FontFamily.SansSerif,
                                 fontSize = 10.sp,
                                 color = NeonCyan
                             )
@@ -259,7 +259,7 @@ fun ScannerViewScreen(
             if (scannedSku.isNotBlank()) {
                 Text(
                     text = "Last Detected SKU code: $scannedSku",
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = FontFamily.SansSerif,
                     fontSize = 12.sp,
                     color = NeonCyan,
                     fontWeight = FontWeight.Bold,
@@ -278,7 +278,7 @@ fun ScannerViewScreen(
                 title = {
                     Text(
                         text = "SKU MATCH: ${item.name}",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         color = NeonCyan
                     )
@@ -287,19 +287,19 @@ fun ScannerViewScreen(
                     Column {
                         Text(
                             text = "SKU: ${item.sku}",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             color = GlassTextSecondary,
                             fontSize = 12.sp
                         )
                         Text(
                             text = "Category: ${item.category}",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             color = GlassTextSecondary,
                             fontSize = 12.sp
                         )
                         Text(
                             text = "Standard Cost: ৳${String.format("%.2f", item.cost)}",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             color = GlassTextSecondary,
                             fontSize = 12.sp
                         )
@@ -308,7 +308,7 @@ fun ScannerViewScreen(
                         
                         Text(
                             text = "Current Stock Level: ${item.currentStock} units",
-                            fontFamily = FontFamily.Serif,
+                            fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             fontSize = 15.sp
@@ -342,7 +342,7 @@ fun ScannerViewScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Deduct (-)", color = Color.White, fontFamily = FontFamily.Serif)
+                            Text("Deduct (-)", color = Color.White, fontFamily = FontFamily.SansSerif)
                         }
                         
                         Spacer(modifier = Modifier.width(8.dp))
@@ -360,13 +360,13 @@ fun ScannerViewScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Restock (+)", color = Black, fontFamily = FontFamily.Serif)
+                            Text("Restock (+)", color = Black, fontFamily = FontFamily.SansSerif)
                         }
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showScanDetailsDialog = false; scannedSku = "" }) {
-                        Text("Cancel", fontFamily = FontFamily.Serif, color = GlassTextSecondary)
+                        Text("Cancel", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary)
                     }
                 }
             )
@@ -380,7 +380,7 @@ fun ScannerViewScreen(
                 title = {
                     Text(
                         text = "NEW SKU DETECTED",
-                        fontFamily = FontFamily.Serif,
+                        fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         color = ElectricBlue
                     )
@@ -392,7 +392,7 @@ fun ScannerViewScreen(
                         item {
                             Text(
                                 text = "Code: $scannedSku",
-                                fontFamily = FontFamily.Serif,
+                                fontFamily = FontFamily.SansSerif,
                                 fontWeight = FontWeight.Bold,
                                 color = NeonCyan,
                                 fontSize = 13.sp
@@ -470,12 +470,12 @@ fun ScannerViewScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
                     ) {
-                        Text("Register Item", color = Black, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold)
+                        Text("Register Item", color = Black, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showCreateSkuDialog = false; scannedSku = "" }) {
-                        Text("Cancel", fontFamily = FontFamily.Serif, color = GlassTextSecondary)
+                        Text("Cancel", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary)
                     }
                 }
             )
