@@ -27,8 +27,12 @@ jobs:
       - name: Generate Cloud Wrapper
         run: gradle wrapper
 
-      - name: 🔐 Dynamically Forge local.properties with API Key
-        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > local.properties
+      - name: 🔐 Carpet-Bomb API Key Injection (.env & local.properties)
+        env:
+          SECRET_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "GEMINI_API_KEY=$SECRET_KEY" > local.properties
+          echo "GEMINI_API_KEY=$SECRET_KEY" > .env
 
       - name: Forge Debug Keystore
         run: |
