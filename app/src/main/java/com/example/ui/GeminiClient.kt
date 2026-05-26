@@ -104,9 +104,9 @@ object GeminiClient {
                     GeminiContent(
                         parts = listOf(GeminiPart(prompt))
                     )
-                )
-            ),
-            tools = listOf(mapOf("google_search" to emptyMap<String, String>()))
+                ),
+                tools = listOf(mapOf("googleSearch" to emptyMap<String, String>()))
+            )
 
             val response = apiService.generateContent(apiKey, requestPayload)
             val jsonText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
