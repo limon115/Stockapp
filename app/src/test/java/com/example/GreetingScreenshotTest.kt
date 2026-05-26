@@ -28,7 +28,7 @@ class GreetingScreenshotTest {
     composeTestRule.setContent { 
       MyApplicationTheme { 
         GlassCard {
-          Text("GlassLog Enterprise")
+          Text("Polwel Enterprise")
         }
       } 
     }

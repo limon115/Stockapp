@@ -61,6 +61,7 @@ fun InventoryDashboardScreen(
     var newCategory by remember { mutableStateOf("General") }
     var newStockString by remember { mutableStateOf("5") }
     var newCostString by remember { mutableStateOf("10.00") }
+    var newThresholdString by remember { mutableStateOf("2") }
 
     // Categories list dynamically calculated
     val categories = remember(items) {
@@ -83,9 +84,9 @@ fun InventoryDashboardScreen(
     val totalStockUnits = items.sumOf { it.currentStock }
     val totalValuation = items.sumOf { it.currentStock * it.cost }
     
-    // Critical stock items indicator list (Threshold: <= 5 units)
+    // Critical stock items indicator list based on per-item custom threshold
     val lowStockItems = remember(items) {
-        items.filter { it.currentStock <= 5 }
+        items.filter { it.currentStock <= it.lowStockThreshold }
     }
     
     Scaffold(
@@ -119,7 +120,7 @@ fun InventoryDashboardScreen(
                 ) {
                     Column {
                         GlassHeader(
-                            title = "GlassLog",
+                            title = "Polwel",
                             subtitle = "Enterprise Tactical Inventory Ledger"
                         )
                     }
@@ -163,7 +164,7 @@ fun InventoryDashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "$${DecimalFormat("#,##0.00").format(totalValuation)}",
+                            text = "৳${DecimalFormat("#,##0.00").format(totalValuation)}",
                             fontFamily = FontFamily.Serif,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
@@ -445,7 +446,7 @@ fun InventoryDashboardScreen(
                                 GlassTextField(
                                     value = newStockString,
                                     onValueChange = { newStockString = it },
-                                    label = "Initial stock units",
+                                    label = "Initial stock",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.weight(1f)
                                 )
@@ -453,8 +454,16 @@ fun InventoryDashboardScreen(
                                 GlassTextField(
                                     value = newCostString,
                                     onValueChange = { newCostString = it },
-                                    label = "Unit Cost ($)",
+                                    label = "Unit Cost (TK)",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                GlassTextField(
+                                    value = newThresholdString,
+                                    onValueChange = { newThresholdString = it },
+                                    label = "Alert Limit",
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -470,14 +479,23 @@ fun InventoryDashboardScreen(
                                     
                                     val stockVal = newStockString.toIntOrNull() ?: 0
                                     val costVal = newCostString.toDoubleOrNull() ?: 0.00
+                                    val thresholdVal = newThresholdString.toIntOrNull() ?: 2
                                     
-                                    viewModel.addItem(newName, newSku.trim(), stockVal, newCategory.trim(), costVal) { id ->
+                                    viewModel.addItem(
+                                        name = newName,
+                                        sku = newSku.trim(),
+                                        initialStock = stockVal,
+                                        category = newCategory.trim(),
+                                        cost = costVal,
+                                        lowStockThreshold = thresholdVal
+                                    ) { id ->
                                         Toast.makeText(context, "Item registered successfully!", Toast.LENGTH_SHORT).show()
                                         // Reset fields
                                         newName = ""
                                         newSku = ""
                                         newStockString = "5"
                                         newCostString = "10.00"
+                                        newThresholdString = "2"
                                         showManualRegisterForm = false
                                     }
                                 },
@@ -562,6 +580,9 @@ fun InventoryDashboardScreen(
                         onDelete = {
                             viewModel.deleteItem(item)
                         },
+                        onUpdateThreshold = { threshold ->
+                            viewModel.updateLowStockThreshold(item.itemId, threshold)
+                        },
                         modifier = Modifier
                     )
                 }
@@ -584,7 +605,7 @@ fun InventoryDashboardScreen(
                         color = GlassTextSecondary
                     )
                     Text(
-                        text = "GlassLog OS Enterprise Edition",
+                        text = "Polwel OS Enterprise Edition",
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Normal,
                         fontSize = 9.sp,
@@ -601,13 +622,16 @@ fun InventoryItemRow(
     item: InventoryItem,
     onAdjustStock: (Int, String) -> Unit,
     onDelete: () -> Unit,
+    onUpdateThreshold: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expandedItemMenu by remember { mutableStateOf(false) }
+    var showThresholdDialog by remember { mutableStateOf(false) }
+    var inputThreshold by remember { mutableStateOf(item.lowStockThreshold.toString()) }
     
-    // Warn if out of stock (falls below threshold, e.g., 5 units)
+    // Warn if out of stock (falls below threshold, e.g., lowStockThreshold units)
     val isOut = item.currentStock == 0
-    val isLow = !isOut && item.currentStock <= 5
+    val isLow = !isOut && item.currentStock <= item.lowStockThreshold
     
     val badgeColor = when {
         isOut -> AccentRed
@@ -682,6 +706,13 @@ fun InventoryItemRow(
                         fontSize = 11.sp,
                         color = GlassTextSecondary
                     )
+                    // Added visual indicator of the alert threshold
+                    Text(
+                        text = "Alert: ≤${item.lowStockThreshold}",
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 11.sp,
+                        color = if (isLow) Color(0xFFFFB74D) else GlassTextSecondary
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -690,13 +721,13 @@ fun InventoryItemRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Cost: $${String.format("%.2f", item.cost)}",
+                        text = "Cost: ৳${String.format("%.2f", item.cost)}",
                         fontFamily = FontFamily.Serif,
                         fontSize = 11.sp,
                         color = Color(0x88FFFFFF)
                     )
                     Text(
-                        text = "Value: $${String.format("%.2f", item.currentStock * item.cost)}",
+                        text = "Value: ৳${String.format("%.2f", item.currentStock * item.cost)}",
                         fontFamily = FontFamily.Serif,
                         fontSize = 11.sp,
                         color = NeonCyan,
@@ -775,6 +806,15 @@ fun InventoryItemRow(
                         modifier = Modifier.background(Color(0xFF0F172A))
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Set Alert Limit", fontFamily = FontFamily.Serif, color = Color.White) },
+                            leadingIcon = { Icon(Icons.Default.Warning, contentDescription = "Threshold", tint = Color(0xFFFFB74D)) },
+                            onClick = {
+                                inputThreshold = item.lowStockThreshold.toString()
+                                showThresholdDialog = true
+                                expandedItemMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("Delete SKU Entry", fontFamily = FontFamily.Serif, color = AccentRed) },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AccentRed) },
                             onClick = {
@@ -786,5 +826,55 @@ fun InventoryItemRow(
                 }
             }
         }
+    }
+
+    if (showThresholdDialog) {
+        AlertDialog(
+            onDismissRequest = { showThresholdDialog = false },
+            title = {
+                Text(
+                    text = "Custom Alert limit",
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Set custom low-stock threshold for ${item.name}. Alert is active when current stock is equal to or below this value.",
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 12.sp,
+                        color = GlassTextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    GlassTextField(
+                        value = inputThreshold,
+                        onValueChange = { inputThreshold = it },
+                        label = "Alert Threshold",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val thresh = inputThreshold.toIntOrNull()
+                        if (thresh != null && thresh >= 0) {
+                            onUpdateThreshold(thresh)
+                            showThresholdDialog = false
+                        }
+                    }
+                ) {
+                    Text("SAVE", fontFamily = FontFamily.Serif, color = NeonCyan, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showThresholdDialog = false }) {
+                    Text("CANCEL", fontFamily = FontFamily.Serif, color = GlassTextSecondary)
+                }
+            },
+            containerColor = Color(0xFF1E293B)
+        )
     }
 }

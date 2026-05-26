@@ -65,6 +65,7 @@ fun ScannerViewScreen(
     var newSkuCategory by remember { mutableStateOf("Electronics") }
     var newSkuStock by remember { mutableStateOf("10") }
     var newSkuCost by remember { mutableStateOf("25.00") }
+    var newSkuThreshold by remember { mutableStateOf("2") }
 
     // Quick quantity manipulation
     var adjustQtyString by remember { mutableStateOf("1") }
@@ -85,6 +86,7 @@ fun ScannerViewScreen(
                 newSkuCost = "15.00"
                 newSkuStock = "5"
                 newSkuCategory = "General"
+                newSkuThreshold = "2"
                 showScanDetailsDialog = false
                 showCreateSkuDialog = true
             }
@@ -296,7 +298,7 @@ fun ScannerViewScreen(
                             fontSize = 12.sp
                         )
                         Text(
-                            text = "Standard Cost: $${String.format("%.2f", item.cost)}",
+                            text = "Standard Cost: ৳${String.format("%.2f", item.cost)}",
                             fontFamily = FontFamily.Serif,
                             color = GlassTextSecondary,
                             fontSize = 12.sp
@@ -425,11 +427,19 @@ fun ScannerViewScreen(
                                 GlassTextField(
                                     value = newSkuCost,
                                     onValueChange = { newSkuCost = it },
-                                    label = "Cost ($)",
+                                    label = "Cost (TK)",
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                     modifier = Modifier.weight(1f)
                                 )
                             }
+                        }
+                        item {
+                            GlassTextField(
+                                value = newSkuThreshold,
+                                onValueChange = { newSkuThreshold = it },
+                                label = "Low-Stock Alert Threshold",
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
                         }
                     }
                 },
@@ -442,13 +452,15 @@ fun ScannerViewScreen(
                             }
                             val stock = newSkuStock.toIntOrNull() ?: 0
                             val cost = newSkuCost.toDoubleOrNull() ?: 10.00
+                            val threshold = newSkuThreshold.toIntOrNull() ?: 2
                             
                             viewModel.addItem(
                                 name = newSkuName,
                                 sku = scannedSku,
                                 initialStock = stock,
                                 category = newSkuCategory,
-                                cost = cost
+                                cost = cost,
+                                lowStockThreshold = threshold
                             ) {
                                 Toast.makeText(context, "Added new SKU: $newSkuName", Toast.LENGTH_SHORT).show()
                                 showCreateSkuDialog = false

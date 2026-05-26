@@ -42,7 +42,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             )
     }
 
-    fun addItem(name: String, sku: String, initialStock: Int, category: String, cost: Double, onCompleted: (Long) -> Unit) {
+    fun addItem(name: String, sku: String, initialStock: Int, category: String, cost: Double, lowStockThreshold: Int = 2, onCompleted: (Long) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val existing = repository.getItemBySku(sku)
             if (existing != null) {
@@ -55,7 +55,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     sku = sku,
                     currentStock = initialStock,
                     category = category,
-                    cost = cost
+                    cost = cost,
+                    lowStockThreshold = lowStockThreshold
                 )
                 val newId = repository.insertItem(item)
                 
@@ -71,6 +72,16 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     repository.insertAuditLog(logEntry)
                 }
                 launch(Dispatchers.Main) { onCompleted(newId) }
+            }
+        }
+    }
+
+    fun updateLowStockThreshold(itemId: Long, threshold: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val item = repository.getItemById(itemId)
+            if (item != null) {
+                val updated = item.copy(lowStockThreshold = threshold)
+                repository.updateItem(updated)
             }
         }
     }

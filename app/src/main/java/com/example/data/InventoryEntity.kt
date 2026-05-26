@@ -11,5 +11,6 @@ data class InventoryItem(
     val sku: String,
     val currentStock: Int,
     val category: String,
-    val cost: Double
+    val cost: Double,
+    val lowStockThreshold: Int = 2
 )
