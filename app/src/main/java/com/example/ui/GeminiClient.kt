@@ -22,7 +22,6 @@ data class GeminiContent(val parts: List<GeminiPart>)
 data class GeminiGenerationConfig(val responseMimeType: String? = "application/json", val temperature: Float? = 0.5f)
 data class GeminiRequest(
     val contents: List<GeminiContent>,
-    val tools: List<Map<String, Map<String, String>>>? = null,
     val generationConfig: GeminiGenerationConfig = GeminiGenerationConfig()
 )
 
@@ -104,8 +103,7 @@ object GeminiClient {
                     GeminiContent(
                         parts = listOf(GeminiPart(prompt))
                     )
-                ),
-                tools = listOf(mapOf("googleSearch" to emptyMap<String, String>()))
+                )
             )
 
             val response = apiService.generateContent(apiKey, requestPayload)
