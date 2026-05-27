@@ -4,19 +4,29 @@ package com.example.ui
 import android.util.Log
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 import com.example.BuildConfig
 
-// Moshi data mapping for Gemini API REST payloads
+// --- Data Classes for UPCitemdb ---
+data class UpcItem(
+    val title: String?,
+    val brand: String? = null,
+    val description: String? = null
+)
+
+data class UpcResponse(
+    val code: String?,
+    val items: List<UpcItem>?
+)
+
+// --- Data Classes for Gemini API REST payloads ---
 data class GeminiPart(val text: String)
 data class GeminiContent(val parts: List<GeminiPart>)
 data class GeminiGenerationConfig(val responseMimeType: String? = "application/json", val temperature: Float? = 0.5f)
@@ -36,6 +46,14 @@ data class SkuProductSuggestion(
     val hasAiIntelligence: Boolean = true
 )
 
+// --- Retrofit API Interfaces ---
+interface UpcItemDbApiService {
+    @GET("prod/trial/lookup")
+    suspend fun lookupUpc(
+        @Query("upc") upc: String
+    ): UpcResponse
+}
+
 interface GeminiApiService {
     @POST("v1beta/models/gemini-3.5-flash:generateContent")
     suspend fun generateContent(
@@ -47,6 +65,7 @@ interface GeminiApiService {
 object GeminiClient {
     private const val TAG = "GeminiClient"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/"
+    private const val UPC_BASE_URL = "https://api.upcitemdb.com/"
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -67,26 +86,85 @@ object GeminiClient {
             .create(GeminiApiService::class.java)
     }
 
+    private val upcApiService: UpcItemDbApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(UPC_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(UpcItemDbApiService::class.java)
+    }
+
     /**
-     * Attempts to resolve product details from the SKU.
-     * Integrates Gemini 3.5-flash to dynamically predict/discover typical product names,
-     * categories, and pricing patterns. Falls back to deterministic templates when offline
-     * or if the API key is not configured.
+     * Looks up the barcode title on UPCitemdb trial API.
+     */
+    private suspend fun lookupUpcTitle(sku: String): String? {
+        return try {
+            val response = upcApiService.lookupUpc(sku)
+            if (response.code == "OK" && !response.items.isNullOrEmpty()) {
+                response.items.firstOrNull()?.title
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "UPCitemdb list lookup failed: ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * Attempts to resolve product details from the SKU using the hybrid two-step pipeline.
      */
     suspend fun suggestProductForSku(sku: String): SkuProductSuggestion {
         val trimmedSku = sku.trim()
+        if (trimmedSku.isEmpty()) {
+            return SkuProductSuggestion(
+                name = "Unknown SKU",
+                category = "Manual Entry",
+                cost = 0.0,
+                explanation = "Not found in global database. (Empty SKU passed)"
+            )
+        }
+
+        // Step 1: UPCitemdb Lookup
+        val foundTitle = lookupUpcTitle(trimmedSku)
+        
+        if (foundTitle.isNullOrBlank()) {
+            Log.d(TAG, "SKU '$trimmedSku' lookup failed or not found. Returning negative lookup default.")
+            return SkuProductSuggestion(
+                name = "Unknown SKU",
+                category = "Manual Entry",
+                cost = 0.0,
+                explanation = "Not found in global database."
+            )
+        }
+
+        Log.d(TAG, "UPC resolved successfully! Title: '$foundTitle'. Passing to Gemini for classification.")
+
+        // Step 2: The Gemini Formatting
         val apiKey = BuildConfig.GEMINI_API_KEY
 
         // Check for placeholder or blank API key
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-            Log.w(TAG, "Gemini API key is unconfigured. Triggering smart fallback module.")
-            return generateSmartFallback(trimmedSku, "Placeholder or unconfigured API Key error fallback.")
+            Log.w(TAG, "Gemini API key is unconfigured. Returning raw found item from database.")
+            return SkuProductSuggestion(
+                name = foundTitle,
+                category = "Unclassified",
+                cost = 0.0,
+                explanation = "Resolved from global UPC database. (Gemini API Key unconfigured for classification)",
+                hasAiIntelligence = false
+            )
         }
 
         val prompt = """
-            You are an expert commercial retail lookup system.
-            We have scanned or entered a barcode/SKU with the code: "$trimmedSku".
-            Your task is to identify the exact real-world product for this barcode. If you DO NOT know the exact product, DO NOT guess or invent one. Instead, return name: "Unknown SKU", category: "Manual Entry Required", cost: 0.0, and explanation: "Barcode not recognized by AI."
+            You are an expert commercial retail lookup and classification system.
+            We have scanned or entered a barcode/SKU and successfully resolved its official global catalog title to: "$foundTitle".
+            Your task is to classify this exact product name and strictly format it into our existing JSON structure.
+            Provide:
+            1. "name": Use the exact same name or a slightly cleaned/nicer version of "$foundTitle".
+            2. "category": A broad, industry-standard category (e.g. "Beverages", "Spices & Condiments", "Cosmetics", "Electronics Accessories").
+            3. "cost": Estimate a realistic wholesale item-cost (floating-point double in Bangladesh Taka/BDT).
+            4. "explanation": A 1-sentence brand/product explanation of why this fits. Specify that it was "Resolved from global UPC database".
             
             Respond only with a single, valid JSON object in the exact structure below. Avoid markdown, wrap, trailing commas, or any extra text.
             {
@@ -122,7 +200,14 @@ object GeminiClient {
             Log.e(TAG, "Gemini API service invocation failed: ${e.message}", e)
         }
 
-        return generateSmartFallback(trimmedSku, "API timeout or network socket disconnect.")
+        // Smart fallback on Gemini failure with successful UPC lookup
+        return SkuProductSuggestion(
+            name = foundTitle,
+            category = "Unclassified",
+            cost = 120.00,
+            explanation = "Resolved from global UPC database. (Gemini classification failed)",
+            hasAiIntelligence = false
+        )
     }
 
     private fun cleanMarkdownFences(rawText: String): String {
@@ -136,68 +221,5 @@ object GeminiClient {
             clean = clean.removeSuffix("```")
         }
         return clean.trim()
-    }
-
-    /**
-     * Smart local heuristic generator.
-     * Generates extremely realistic business catalog items based on barcode prefix standards or hashing characters.
-     */
-    private fun generateSmartFallback(sku: String, reason: String): SkuProductSuggestion {
-        val hash = sku.hashCode()
-        
-        // 1. Barcode standard matching
-        if (sku.startsWith("978") || sku.startsWith("979")) {
-            return SkuProductSuggestion(
-                name = "Modern Software Architecture Patterns Vol. ${1 + kotlin.math.abs(hash % 3)}",
-                category = "Books & Literature",
-                cost = 450.00 + (kotlin.math.abs(hash % 350)),
-                explanation = "Determined as standard Book ISBN reference ($reason)",
-                hasAiIntelligence = false
-            )
-        }
-        
-        if (sku.contains("GLASS", ignoreCase = true) || sku.contains("GLS", ignoreCase = true)) {
-            return SkuProductSuggestion(
-                name = "Aero-Tempered Glass Panel G-${10 + kotlin.math.abs(hash % 90)}",
-                category = "Raw Materials",
-                cost = 1450.00 + (kotlin.math.abs(hash % 800)),
-                explanation = "Matched Quartz Glass construction standard ($reason)",
-                hasAiIntelligence = false
-            )
-        }
-
-        if (sku.contains("LASER", ignoreCase = true) || sku.contains("LSR", ignoreCase = true)) {
-            return SkuProductSuggestion(
-                name = "Reflective Alignment Laser Lens L-${20 + kotlin.math.abs(hash % 80)}",
-                category = "Tools & Optics",
-                cost = 2500.00 + (kotlin.math.abs(hash % 1000)),
-                explanation = "Matched optical calibration device standard ($reason)",
-                hasAiIntelligence = false
-            )
-        }
-
-        if (sku.startsWith("SKU-PRO", ignoreCase = true)) {
-            return SkuProductSuggestion(
-                name = "Commercial Pro Controller Module",
-                category = "Electronics",
-                cost = 8500.00,
-                explanation = "Suggested from business enterprise templates ($reason)",
-                hasAiIntelligence = false
-            )
-        }
-
-        // 2. Hash-based deterministic generic items to prevent boring placeholder text
-        val mockItems = listOf(
-            SkuProductSuggestion("Titanium Hex-Nut Calibration Kit", "Fasteners & Construction", 230.00, "Synthesized from general high-strength mechanical components", false),
-            SkuProductSuggestion("Hyper-Speed USB-C Quantum Hub", "Electronics Accessories", 1250.00, "Generated matching generic high-speed bus parameters", false),
-            SkuProductSuggestion("Hydro-Polymer Waterproof Sealant", "Chemical Supplies", 380.00, "Synthesized as robust industrial adhesive standard", false),
-            SkuProductSuggestion("Aluminum Alloy Supporting Bracket", "Structural Components", 980.00, "Generated from standard architectural bracing catalog", false),
-            SkuProductSuggestion("Pneumatic Pressure Sensing Valve", "Pneumatics", 4100.00, "Synthesized as industrial smart transducer standard", false),
-            SkuProductSuggestion("Neo-Fiber Insulation Sheet", "Isolation Materials", 640.00, "Suggested from HVAC thermal isolation properties", false)
-        )
-        
-        val index = kotlin.math.abs(hash % mockItems.size)
-        val selected = mockItems[index]
-        return selected.copy(explanation = "${selected.explanation} ($reason)")
     }
 }
