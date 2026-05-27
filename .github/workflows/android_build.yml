@@ -1,41 +1,51 @@
-name: GlassLog Cloud Compilation
+# Architected by Khalid Hasan Limon
+name: GlassLog Enterprise Build
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: Cloud Build APK
+  compile:
+    name: Build Native APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
 
-      - name: Generate Gradle Wrapper (Cloud Execution)
+      - name: Generate Cloud Wrapper
         run: gradle wrapper
 
-      - name: Generate Debug Keystore Dynamically
+      - name: 🔐 Carpet-Bomb API Key Injection
+        env:
+          SECRET_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          SAFE_KEY="${SECRET_KEY:-MY_GEMINI_API_KEY}"
+          echo "GEMINI_API_KEY=\"$SAFE_KEY\"" > local.properties
+          echo "GEMINI_API_KEY=\"$SAFE_KEY\"" > .env
+
+      - name: Forge Debug Keystore
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
 
-      - name: Grant Execute Permissions
+      - name: Grant Exec Permissions
         run: chmod +x gradlew || true
 
-      - name: Assemble Debug APK with Gradle
+      - name: Assemble GlassLog APK
         run: ./gradlew assembleDebug --no-daemon
         
-      - name: Upload GlassLog APK Artifact
+      - name: Upload App Artifact
         uses: actions/upload-artifact@v4
         with:
           name: GlassLog-Debug-APK
