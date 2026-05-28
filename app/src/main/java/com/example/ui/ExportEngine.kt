@@ -74,7 +74,9 @@ object ExportEngine {
 
     fun exportToPDF(
         context: Context,
-        items: List<InventoryItem>
+        items: List<InventoryItem>,
+        periodLogs: List<AuditLogEntry> = emptyList(),
+        periodTitle: String = "All Time"
     ): String {
         val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
         val timestamp = sdf.format(Date())
@@ -126,7 +128,7 @@ object ExportEngine {
         // Generation Date Indicator
         paint.color = Color.parseColor("#475569")
         paint.textSize = 9f
-        canvas.drawText("Report Generated: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()), 40f, 115f, paint)
+        canvas.drawText("Report Generated: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()) + " | Period: $periodTitle", 40f, 115f, paint)
         
         // Metrics Summary Frame inside Header (Pure B&W light theme style)
         paint.color = Color.parseColor("#F8FAFC") // Very light background tint
@@ -314,7 +316,7 @@ object ExportEngine {
             paint
         )
         
-        val pageCountText = "Page 1 of 1"
+        val pageCountText = "Page 1 of " + (if (periodLogs.isNotEmpty()) "2" else "1")
         canvas.drawText(
             pageCountText,
             (pageWidth - 75).toFloat(),
@@ -323,6 +325,80 @@ object ExportEngine {
         )
         
         pdfDocument.finishPage(page)
+
+        if (periodLogs.isNotEmpty()) {
+            val pageInfo2 = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 2).create()
+            val page2 = pdfDocument.startPage(pageInfo2)
+            val canvas2: Canvas = page2.canvas
+            val paint2 = Paint()
+            
+            canvas2.drawColor(Color.WHITE)
+            
+            paint2.color = Color.parseColor("#0F172A")
+            paint2.textSize = 16f
+            paint2.isAntiAlias = true
+            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            canvas2.drawText("AUDIT TRANSACTION LOGS ($periodTitle)", 40f, 60f, paint2)
+            
+            val startY2 = 100f
+            paint2.color = Color.parseColor("#F1F5F9")
+            canvas2.drawRect(20f, startY2, (pageWidth - 20).toFloat(), startY2 + 25f, paint2)
+            
+            paint2.color = Color.parseColor("#0F172A")
+            paint2.style = Paint.Style.STROKE
+            paint2.strokeWidth = 1.5f
+            canvas2.drawLine(20f, startY2, (pageWidth - 20).toFloat(), startY2, paint2)
+            canvas2.drawLine(20f, startY2 + 25f, (pageWidth - 20).toFloat(), startY2 + 25f, paint2)
+            
+            paint2.style = Paint.Style.FILL
+            paint2.textSize = 10f
+            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            
+            canvas2.drawText("DATE/TIME", 35f, startY2 + 16f, paint2)
+            canvas2.drawText("SKU", 150f, startY2 + 16f, paint2)
+            canvas2.drawText("TYPE", 250f, startY2 + 16f, paint2)
+            canvas2.drawText("QTY", 320f, startY2 + 16f, paint2)
+            
+            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            paint2.textSize = 9.5f
+            
+            var currentY2 = startY2 + 25f
+            val limitedLogs = periodLogs.take(35) // limited mapping 
+            val logSdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+            
+            for (log in limitedLogs) {
+                currentY2 += 22f
+                
+                val dateStr = logSdf.format(Date(log.timestamp))
+                canvas2.drawText(dateStr, 35f, currentY2, paint2)
+                
+                val shortSku = if (log.sku.length > 15) log.sku.substring(0, 13) + ".." else log.sku
+                canvas2.drawText(shortSku, 150f, currentY2, paint2)
+                
+                paint2.color = if (log.transactionType == "IN") Color.parseColor("#059669") else Color.parseColor("#E11D48")
+                canvas2.drawText(log.transactionType, 250f, currentY2, paint2)
+                
+                paint2.color = Color.parseColor("#0F172A")
+                val qtySign = if (log.transactionType == "IN") "+" else "-"
+                canvas2.drawText("$qtySign${log.quantityChanged}", 320f, currentY2, paint2)
+                
+                paint2.color = Color.parseColor("#F1F5F9")
+                paint2.strokeWidth = 0.5f
+                canvas2.drawLine(20f, currentY2 + 6f, (pageWidth - 20).toFloat(), currentY2 + 6f, paint2)
+                paint2.color = Color.parseColor("#475569")
+            }
+            
+            // Footer
+            paint2.strokeWidth = 0.8f
+            paint2.style = Paint.Style.STROKE
+            canvas2.drawLine(20f, (pageHeight - 50).toFloat(), (pageWidth - 20).toFloat(), (pageHeight - 50).toFloat(), paint2)
+            paint2.style = Paint.Style.FILL
+            paint2.textSize = 8.5f
+            canvas2.drawText("Generated by Polwel Inventory | Khalid Hasan Limon", 35f, (pageHeight - 35).toFloat(), paint2)
+            canvas2.drawText("Page 2 of 2", (pageWidth - 75).toFloat(), (pageHeight - 35).toFloat(), paint2)
+
+            pdfDocument.finishPage(page2)
+        }
         
         val fileUriString = writePdfDocumentToDownloads(context, pdfDocument, fileName)
         pdfDocument.close()

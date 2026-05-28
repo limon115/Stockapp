@@ -153,10 +153,19 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun triggerPdfExport(context: Context) {
+    fun triggerPdfExport(context: Context, days: Int? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             val items = inventoryState.value
-            val result = ExportEngine.exportToPDF(context, items)
+            val logs = auditLogsState.value
+
+            val periodEnd = System.currentTimeMillis()
+            val periodStart = if (days != null) periodEnd - (days * 24L * 60L * 60L * 1000L) else 0L
+
+            val filteredLogs = logs.filter { it.timestamp in periodStart..periodEnd }
+            
+            val periodTitle = if (days != null) "Last $days Days" else "All Time"
+
+            val result = ExportEngine.exportToPDF(context, items, filteredLogs, periodTitle)
             _exportMessage.value = if (result.startsWith("content://") || result.startsWith("file://")) {
                 "PDF Report exported successfully to Downloads!"
             } else {

@@ -58,6 +58,7 @@ fun InventoryDashboardScreen(
     // Manual registration visibility
     var showManualRegisterForm by remember { mutableStateOf(false) }
     var manualTabSelection by remember { mutableIntStateOf(0) }
+    var showPdfPeriodDialog by remember { mutableStateOf(false) }
     
     // New Stock Registration Variables
     var newName by remember { mutableStateOf("") }
@@ -479,7 +480,7 @@ fun InventoryDashboardScreen(
 
                             // PDF Button (Distinct high contrast component with down-arrow)
                             Button(
-                                onClick = { viewModel.triggerPdfExport(context) },
+                                onClick = { showPdfPeriodDialog = true },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = NeonCyan
                                 ),
@@ -912,6 +913,51 @@ fun InventoryDashboardScreen(
                     )
                 }
             }
+        }
+
+        if (showPdfPeriodDialog) {
+            AlertDialog(
+                onDismissRequest = { showPdfPeriodDialog = false },
+                containerColor = DynamicCardBackground,
+                title = {
+                    Text("PDF Report Extraction", color = Color.White, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
+                },
+                text = {
+                    Column {
+                        Text("Select a specialized period to construct a targeted report inclusive of Audit Transaction logs within that timeframe.", color = GlassTextSecondary, fontSize = 13.sp)
+                        Spacer(Modifier.height(16.dp))
+                        Button(
+                            onClick = { 
+                                viewModel.triggerPdfExport(context, 7)
+                                showPdfPeriodDialog = false 
+                            }, 
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                        ) { Text("Last 7 Days Activity", color = NeonCyan) }
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = { 
+                                viewModel.triggerPdfExport(context, 30)
+                                showPdfPeriodDialog = false 
+                            }, 
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                        ) { Text("Last 30 Days Monthly", color = NeonCyan) }
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = { 
+                                viewModel.triggerPdfExport(context, null)
+                                showPdfPeriodDialog = false 
+                            }, 
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
+                        ) { Text("Master Enterprise All-Time", color = Color.White, fontWeight = FontWeight.Bold) }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showPdfPeriodDialog = false }) { Text("Cancel", color = AccentGreen) }
+                }
+            )
         }
     }
 }
