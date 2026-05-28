@@ -12,14 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-
-import android.graphics.Paint
-
-// Dynamic Font Switcher for MS Word Professional Styling
-fun Paint.applySmartFont(text: String, englishFont: android.graphics.Typeface, banglaFont: android.graphics.Typeface) {
-    val isBangla = text.any { it.toInt() in 0x0980..0x09FF }
-    this.typeface = if (isBangla) banglaFont else englishFont
-}
 import com.example.data.AuditLogEntry
 import com.example.data.InventoryItem
 import java.io.File
