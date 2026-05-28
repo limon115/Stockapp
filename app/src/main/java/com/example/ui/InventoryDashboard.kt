@@ -359,7 +359,7 @@ fun InventoryDashboardScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(Color(0x0AFFFFFF))
+                                            .background(GlassWhiteSubtle)
                                             .padding(horizontal = 10.dp, vertical = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -370,7 +370,7 @@ fun InventoryDashboardScreen(
                                                 fontFamily = FontFamily.SansSerif,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 13.sp,
-                                                color = Color.White
+                                                color = GlassTextPrimary
                                             )
                                             Spacer(modifier = Modifier.height(2.dp))
                                             Row {
@@ -448,7 +448,7 @@ fun InventoryDashboardScreen(
                             Button(
                                 onClick = { viewModel.triggerCsvExport(context) },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0x1BFFFFFF)
+                                    containerColor = GlassWhite
                                 ),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
@@ -497,7 +497,7 @@ fun InventoryDashboardScreen(
                                     Icon(
                                         imageVector = Icons.Default.ArrowDownward,
                                         contentDescription = "Render PDF",
-                                        tint = Black,
+                                        tint = OnNeonCyan,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -505,7 +505,7 @@ fun InventoryDashboardScreen(
                                         text = "Render PDF",
                                         fontFamily = FontFamily.SansSerif,
                                         fontSize = 12.sp,
-                                        color = Black,
+                                        color = OnNeonCyan,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -547,7 +547,7 @@ fun InventoryDashboardScreen(
                                 ),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Standard (With SKU)", color = if (manualTabSelection == 0) Black else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Standard (With SKU)", color = if (manualTabSelection == 0) OnNeonCyan else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = { manualTabSelection = 1 },
@@ -556,7 +556,7 @@ fun InventoryDashboardScreen(
                                 ),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Name-Only (No SKU)", color = if (manualTabSelection == 1) Black else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("Name-Only (No SKU)", color = if (manualTabSelection == 1) OnNeonCyan else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -757,7 +757,7 @@ fun InventoryDashboardScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = Black, fontWeight = FontWeight.Bold)
+                                Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = OnNeonCyan, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -836,7 +836,7 @@ fun InventoryDashboardScreen(
                         Box(
                             modifier = Modifier
                                 .clip(chipShape)
-                                .background(if (isSelected) Color(0x3300E5FF) else Color(0x0DFFFFFF))
+                                .background(if (isSelected) Color(0x3300E5FF) else GlassWhiteSubtle)
                                 .border(1.dp, if (isSelected) NeonCyan else GlassBorderColor, chipShape)
                                 .clickable { selectedCategoryFilter = cat }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -862,7 +862,7 @@ fun InventoryDashboardScreen(
                             .padding(vertical = 40.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.Info, contentDescription = "Empty Ledger", tint = Color(0x33FFFFFF), modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.Info, contentDescription = "Empty Ledger", tint = GlassBorderColor, modifier = Modifier.size(32.dp))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("No stock matches found", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary, fontSize = 12.sp)
                     }
@@ -909,7 +909,7 @@ fun InventoryDashboardScreen(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Normal,
                         fontSize = 9.sp,
-                        color = Color(0x33FFFFFF)
+                        color = GlassBorderColor
                     )
                 }
             }
@@ -920,7 +920,7 @@ fun InventoryDashboardScreen(
                 onDismissRequest = { showPdfPeriodDialog = false },
                 containerColor = DynamicCardBackground,
                 title = {
-                    Text("PDF Report Extraction", color = Color.White, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
+                    Text("PDF Report Extraction", color = GlassTextPrimary, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
                 },
                 text = {
                     Column {
@@ -1014,7 +1014,7 @@ fun InventoryItemRow(
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color.White
+                        color = GlassTextPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
@@ -1069,7 +1069,7 @@ fun InventoryItemRow(
                         text = "Cost: ৳${String.format("%.2f", item.cost)}",
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 11.sp,
-                        color = Color(0x88FFFFFF)
+                        color = GlassTextSecondary
                     )
                     Text(
                         text = "Value: ৳${String.format("%.2f", item.currentStock * item.cost)}",
@@ -1111,7 +1111,7 @@ fun InventoryItemRow(
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 17.sp,
-                    color = Color.White,
+                    color = GlassTextPrimary,
                     modifier = Modifier.widthIn(min = 24.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -1148,10 +1148,10 @@ fun InventoryItemRow(
                     DropdownMenu(
                         expanded = expandedItemMenu,
                         onDismissRequest = { expandedItemMenu = false },
-                        modifier = Modifier.background(Color(0xFF0F172A))
+                        modifier = Modifier.background(DynamicMenuBackground)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Set Alert Limit", fontFamily = FontFamily.SansSerif, color = Color.White) },
+                            text = { Text("Set Alert Limit", fontFamily = FontFamily.SansSerif, color = GlassTextPrimary) },
                             leadingIcon = { Icon(Icons.Default.Warning, contentDescription = "Threshold", tint = Color(0xFFFFB74D)) },
                             onClick = {
                                 inputThreshold = item.lowStockThreshold.toString()
@@ -1181,7 +1181,7 @@ fun InventoryItemRow(
                     text = "Custom Alert limit",
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = GlassTextPrimary
                 )
             },
             text = {

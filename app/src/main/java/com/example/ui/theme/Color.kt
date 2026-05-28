@@ -8,11 +8,11 @@ val Black = Color(0xFF000000)
 
 val GlassWhite: Color
     @Composable
-    get() = if (LocalIsDarkTheme.current) Color(0x1BFFFFFF) else Color(0x73FFFFFF)
+    get() = if (LocalIsDarkTheme.current) Color(0x1BFFFFFF) else Color(0x1B000000)
 
 val GlassWhiteSubtle: Color
     @Composable
-    get() = if (LocalIsDarkTheme.current) Color(0x0DFFFFFF) else Color(0x33FFFFFF)
+    get() = if (LocalIsDarkTheme.current) Color(0x0DFFFFFF) else Color(0x0A000000)
 
 val GlassBorderColor: Color
     @Composable
@@ -36,6 +36,10 @@ val GlassTextSecondary: Color
 
 val AccentRed = Color(0xFFFF1744)
 val AccentGreen = Color(0xFF00E676)
+
+val OnNeonCyan: Color
+    @Composable
+    get() = if (LocalIsDarkTheme.current) Color.Black else Color.White
 
 val DynamicCardBackground: Color
     @Composable

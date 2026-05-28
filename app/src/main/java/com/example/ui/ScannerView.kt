@@ -269,7 +269,7 @@ fun ScannerViewScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0x1BFFFFFF))
+                                .background(GlassWhite)
                                 .clickable { handleBarcodeScanned(code) }
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
