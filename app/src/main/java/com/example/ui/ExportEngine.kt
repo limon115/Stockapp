@@ -60,11 +60,11 @@ object ExportEngine {
         
         // 4. Audit Log Table
         csvBuilder.append("AUDIT LOG TRADING TRANSACTION LOGS\n")
-        csvBuilder.append("Log ID,Item ID,SKU,Type (IN/OUT),Quantity Changed,Timestamp\n")
+        csvBuilder.append("Log ID,Item ID,Product Name,Type (IN/OUT),Quantity Changed,Timestamp\n")
         val logSdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         for (log in logs) {
             val dateStr = logSdf.format(Date(log.timestamp))
-            csvBuilder.append("${log.logId},${log.itemId},\"${log.sku}\",${log.transactionType},${log.quantityChanged},\"$dateStr\"\n")
+            csvBuilder.append("${log.logId},${log.itemId},\"${log.productName}\",${log.transactionType},${log.quantityChanged},\"$dateStr\"\n")
         }
         
         val content = csvBuilder.toString()
@@ -355,7 +355,7 @@ object ExportEngine {
             paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             
             canvas2.drawText("DATE/TIME", 35f, startY2 + 16f, paint2)
-            canvas2.drawText("SKU", 150f, startY2 + 16f, paint2)
+            canvas2.drawText("PRODUCT", 150f, startY2 + 16f, paint2)
             canvas2.drawText("TYPE", 250f, startY2 + 16f, paint2)
             canvas2.drawText("QTY", 320f, startY2 + 16f, paint2)
             
@@ -372,7 +372,7 @@ object ExportEngine {
                 val dateStr = logSdf.format(Date(log.timestamp))
                 canvas2.drawText(dateStr, 35f, currentY2, paint2)
                 
-                val shortSku = if (log.sku.length > 15) log.sku.substring(0, 13) + ".." else log.sku
+                val shortSku = if (log.productName.length > 15) log.productName.substring(0, 13) + ".." else log.productName
                 canvas2.drawText(shortSku, 150f, currentY2, paint2)
                 
                 paint2.color = if (log.transactionType == "IN") Color.parseColor("#059669") else Color.parseColor("#E11D48")

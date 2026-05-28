@@ -8,8 +8,10 @@ import androidx.room.PrimaryKey
 data class AuditLogEntry(
     @PrimaryKey(autoGenerate = true) val logId: Long = 0,
     val itemId: Long,
-    val sku: String,
+    val productName: String,
     val transactionType: String, // "IN" or "OUT"
     val quantityChanged: Int,
+    val stockValue: Double,
+    val details: String,
     val timestamp: Long
 )

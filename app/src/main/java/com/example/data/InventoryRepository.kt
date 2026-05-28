@@ -20,7 +20,7 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
 
     suspend fun insertAuditLog(entry: AuditLogEntry): Long = inventoryDao.insertAuditLog(entry)
 
-    suspend fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String): Boolean {
+    suspend fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String, details: String = "Stock adjustment", overrideValue: Double? = null): Boolean {
         val item = inventoryDao.getItemById(itemId) ?: return false
         val newStock = if (transactionType == "IN") {
             item.currentStock + quantityChanged
@@ -33,9 +33,11 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
         
         val logEntry = AuditLogEntry(
             itemId = itemId,
-            sku = item.sku,
+            productName = item.name,
             transactionType = transactionType,
             quantityChanged = quantityChanged,
+            stockValue = overrideValue ?: (item.cost * quantityChanged),
+            details = details,
             timestamp = System.currentTimeMillis()
         )
         inventoryDao.insertAuditLog(logEntry)

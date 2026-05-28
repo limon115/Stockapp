@@ -87,9 +87,11 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 if (initialStock > 0) {
                     val logEntry = AuditLogEntry(
                         itemId = newId,
-                        sku = sku,
+                        productName = name,
                         transactionType = "IN",
                         quantityChanged = initialStock,
+                        stockValue = cost * initialStock,
+                        details = "Initial stock registration",
                         timestamp = System.currentTimeMillis()
                     )
                     repository.insertAuditLog(logEntry)
@@ -121,9 +123,9 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String) {
+    fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String, details: String = "Stock adjustment", overrideValue: Double? = null) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.adjustStock(itemId, quantityChanged, transactionType)
+            repository.adjustStock(itemId, quantityChanged, transactionType, details, overrideValue)
         }
     }
 

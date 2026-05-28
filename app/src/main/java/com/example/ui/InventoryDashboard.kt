@@ -28,9 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.AuditLogEntry
 import com.example.data.InventoryItem
 import com.example.ui.theme.*
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -41,6 +45,7 @@ fun InventoryDashboardScreen(
     val context = LocalContext.current
     
     val items by viewModel.inventoryState.collectAsState()
+    val logs by viewModel.auditLogsState.collectAsState()
     val exportMsg by viewModel.exportMessage.collectAsState()
 
     // Clear alerts on triggers
@@ -99,12 +104,11 @@ fun InventoryDashboardScreen(
     }
 
     // Filtered inventory list
-    val filteredItems = remember(items, searchQuery, selectedCategoryFilter) {
-        items.filter { item ->
-            val matchSearch = item.name.contains(searchQuery, ignoreCase = true)
-            val matchCategory = selectedCategoryFilter == "All" || item.category == selectedCategoryFilter
-            matchSearch && matchCategory
-        }
+    val filteredLogs = remember(logs, searchQuery) {
+        logs.filter { log ->
+            val matchSearch = log.productName.contains(searchQuery, ignoreCase = true) || log.details.contains(searchQuery, ignoreCase = true)
+            matchSearch
+        }.sortedByDescending { it.timestamp }
     }
 
     // Calculations
@@ -749,40 +753,8 @@ fun InventoryDashboardScreen(
                 }
             }
 
-            // Category Horizontal Filters Scroll list (Sleek, perfect organically rounded "All" chip)
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    categories.forEach { cat ->
-                        val isSelected = selectedCategoryFilter == cat
-                        val chipShape = if (cat == "All") RoundedCornerShape(24.dp) else RoundedCornerShape(12.dp)
-                        Box(
-                            modifier = Modifier
-                                .clip(chipShape)
-                                .background(if (isSelected) Color(0x3300E5FF) else GlassWhiteSubtle)
-                                .border(1.dp, if (isSelected) NeonCyan else GlassBorderColor, chipShape)
-                                .clickable { selectedCategoryFilter = cat }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = cat,
-                                fontFamily = FontFamily.SansSerif,
-                                fontSize = 11.sp,
-                                color = if (isSelected) NeonCyan else GlassTextSecondary,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        }
-                    }
-                }
-            }
-
             // 6. Dynamic Inventory Ledger List
-            if (filteredItems.isEmpty()) {
+            if (filteredLogs.isEmpty()) {
                 item {
                     Column(
                         modifier = Modifier
@@ -792,25 +764,16 @@ fun InventoryDashboardScreen(
                     ) {
                         Icon(Icons.Default.Info, contentDescription = "Empty Ledger", tint = GlassBorderColor, modifier = Modifier.size(32.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("No stock matches found", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary, fontSize = 12.sp)
+                        Text("No stock transactions found", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary, fontSize = 12.sp)
                     }
                 }
             } else {
                 items(
-                    items = filteredItems,
-                    key = { it.itemId }
-                ) { item ->
-                    InventoryItemRow(
-                        item = item,
-                        onAdjustStock = { qty, type ->
-                            viewModel.adjustStock(item.itemId, qty, type)
-                        },
-                        onDelete = {
-                            viewModel.deleteItem(item)
-                        },
-                        onUpdateThreshold = { threshold ->
-                            viewModel.updateLowStockThreshold(item.itemId, threshold)
-                        },
+                    items = filteredLogs,
+                    key = { it.logId }
+                ) { log ->
+                    AuditLogRow(
+                        log = log,
                         modifier = Modifier
                     )
                 }
@@ -1149,5 +1112,84 @@ fun InventoryItemRow(
             },
             containerColor = DynamicCardSecondary
         )
+    }
+}
+
+@Composable
+fun AuditLogRow(
+    log: AuditLogEntry,
+    modifier: Modifier = Modifier
+) {
+    val isOut = log.transactionType == "OUT"
+    val color = if (isOut) AccentRed else AccentGreen
+    val qtySign = if (isOut) "-" else "+"
+
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(0.5.dp, color.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = log.productName,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = GlassTextPrimary
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "$qtySign${log.quantityChanged}",
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Bold,
+                        color = color,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(6.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = log.details.ifBlank { "No details provided" },
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 12.sp,
+                    color = GlassTextSecondary
+                )
+                
+                Text(
+                    text = "Val: ৳${String.format(Locale.US, "%.2f", log.stockValue)}",
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 12.sp,
+                    color = GlassTextSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            val df = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+            Text(
+                text = df.format(Date(log.timestamp)),
+                fontFamily = FontFamily.SansSerif,
+                fontSize = 10.sp,
+                color = GlassTextSecondary.copy(alpha = 0.7f)
+            )
+        }
     }
 }
