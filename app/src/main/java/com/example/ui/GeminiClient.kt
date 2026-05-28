@@ -47,13 +47,6 @@ data class SkuProductSuggestion(
 )
 
 // --- Retrofit API Interfaces ---
-interface UpcItemDbApiService {
-    @GET("prod/trial/lookup")
-    suspend fun lookupUpc(
-        @Query("upc") upc: String
-    ): UpcResponse
-}
-
 interface GeminiApiService {
     @POST("v1beta/models/gemini-3.5-flash:generateContent")
     suspend fun generateContent(
@@ -65,7 +58,6 @@ interface GeminiApiService {
 object GeminiClient {
     private const val TAG = "GeminiClient"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/"
-    private const val UPC_BASE_URL = "https://api.upcitemdb.com/"
 
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -84,130 +76,6 @@ object GeminiClient {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(GeminiApiService::class.java)
-    }
-
-    private val upcApiService: UpcItemDbApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(UPC_BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(UpcItemDbApiService::class.java)
-    }
-
-    /**
-     * Looks up the barcode title on UPCitemdb trial API.
-     */
-    private suspend fun lookupUpcTitle(sku: String): String? {
-        return try {
-            val response = upcApiService.lookupUpc(sku)
-            if (response.code == "OK" && !response.items.isNullOrEmpty()) {
-                response.items.firstOrNull()?.title
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "UPCitemdb list lookup failed: ${e.message}", e)
-            null
-        }
-    }
-
-    /**
-     * Attempts to resolve product details from the SKU using the hybrid two-step pipeline.
-     */
-    suspend fun suggestProductForSku(sku: String): SkuProductSuggestion {
-        val trimmedSku = sku.trim()
-        if (trimmedSku.isEmpty()) {
-            return SkuProductSuggestion(
-                name = "Unknown SKU",
-                category = "Manual Entry",
-                cost = 0.0,
-                explanation = "Not found in global database. (Empty SKU passed)"
-            )
-        }
-
-        // Step 1: UPCitemdb Lookup
-        val foundTitle = lookupUpcTitle(trimmedSku)
-        
-        if (foundTitle.isNullOrBlank()) {
-            Log.d(TAG, "SKU '$trimmedSku' lookup failed or not found. Returning negative lookup default.")
-            return SkuProductSuggestion(
-                name = "Unknown SKU",
-                category = "Manual Entry",
-                cost = 0.0,
-                explanation = "Not found in global database."
-            )
-        }
-
-        Log.d(TAG, "UPC resolved successfully! Title: '$foundTitle'. Passing to Gemini for classification.")
-
-        // Step 2: The Gemini Formatting
-        val apiKey = BuildConfig.GEMINI_API_KEY
-
-        // Check for placeholder or blank API key
-        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-            Log.w(TAG, "Gemini API key is unconfigured. Returning raw found item from database.")
-            return SkuProductSuggestion(
-                name = foundTitle,
-                category = "Unclassified",
-                cost = 0.0,
-                explanation = "Resolved from global UPC database. (Gemini API Key unconfigured for classification)",
-                hasAiIntelligence = false
-            )
-        }
-
-        val prompt = """
-            You are an expert commercial retail lookup and classification system.
-            We have scanned or entered a barcode/SKU and successfully resolved its official global catalog title to: "$foundTitle".
-            Your task is to classify this exact product name and strictly format it into our existing JSON structure.
-            Provide:
-            1. "name": Use the exact same name or a slightly cleaned/nicer version of "$foundTitle".
-            2. "category": A broad, industry-standard category (e.g. "Beverages", "Spices & Condiments", "Cosmetics", "Electronics Accessories").
-            3. "cost": Estimate a realistic wholesale item-cost (floating-point double in Bangladesh Taka/BDT).
-            4. "explanation": A 1-sentence brand/product explanation of why this fits. Specify that it was "Resolved from global UPC database".
-            
-            Respond only with a single, valid JSON object in the exact structure below. Avoid markdown, wrap, trailing commas, or any extra text.
-            {
-              "name": "Product Name",
-              "category": "Product Category",
-              "cost": 150.00,
-              "explanation": "Specific brand description matching typical barcode standards."
-            }
-        """.trimIndent()
-
-        try {
-            val requestPayload = GeminiRequest(
-                contents = listOf(
-                    GeminiContent(
-                        parts = listOf(GeminiPart(prompt))
-                    )
-                )
-            )
-
-            val response = apiService.generateContent(apiKey, requestPayload)
-            val jsonText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-            
-            if (!jsonText.isNullOrBlank()) {
-                val adapter = moshi.adapter(SkuProductSuggestion::class.java).failOnUnknown()
-                // Clean markdown code blocks if the model ignored responseMimeType setting
-                val cleanedJsonText = cleanMarkdownFences(jsonText)
-                val parsed = adapter.fromJson(cleanedJsonText)
-                if (parsed != null) {
-                    return parsed.copy(hasAiIntelligence = true)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Gemini API service invocation failed: ${e.message}", e)
-        }
-
-        // Smart fallback on Gemini failure with successful UPC lookup
-        return SkuProductSuggestion(
-            name = foundTitle,
-            category = "Unclassified",
-            cost = 120.00,
-            explanation = "Resolved from global UPC database. (Gemini classification failed)",
-            hasAiIntelligence = false
-        )
     }
 
     suspend fun suggestProductForName(productName: String): SkuProductSuggestion {

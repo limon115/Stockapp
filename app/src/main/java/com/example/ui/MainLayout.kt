@@ -27,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.theme.*
 
 enum class ActiveTab {
-    INVENTORY, SCANNER, ANALYTICS, SETTINGS
+    INVENTORY, ANALYTICS, SETTINGS
 }
 
 @Composable
@@ -69,13 +69,6 @@ fun MainLayoutScreen(
                     )
                     
                     TabIconItem(
-                        icon = Icons.Default.QrCodeScanner,
-                        label = "LAZER",
-                        isSelected = activeTab == ActiveTab.SCANNER,
-                        onClick = { activeTab = ActiveTab.SCANNER }
-                    )
-                    
-                    TabIconItem(
                         icon = Icons.Default.Analytics,
                         label = "Velocity",
                         isSelected = activeTab == ActiveTab.ANALYTICS,
@@ -108,12 +101,7 @@ fun MainLayoutScreen(
             ) { targetTab ->
                 when (targetTab) {
                     ActiveTab.INVENTORY -> InventoryDashboardScreen(
-                        viewModel = viewModel,
-                        onNavigateToScanner = { activeTab = ActiveTab.SCANNER }
-                    )
-                    ActiveTab.SCANNER -> ScannerViewScreen(
-                        viewModel = viewModel,
-                        onNavigateToInventory = { activeTab = ActiveTab.INVENTORY }
+                        viewModel = viewModel
                     )
                     ActiveTab.ANALYTICS -> HistoricalGraphScreen(
                         items = items,

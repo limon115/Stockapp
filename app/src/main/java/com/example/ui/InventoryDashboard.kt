@@ -36,8 +36,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun InventoryDashboardScreen(
-    viewModel: InventoryViewModel,
-    onNavigateToScanner: () -> Unit
+    viewModel: InventoryViewModel
 ) {
     val context = LocalContext.current
     
@@ -57,12 +56,10 @@ fun InventoryDashboardScreen(
     
     // Manual registration visibility
     var showManualRegisterForm by remember { mutableStateOf(false) }
-    var manualTabSelection by remember { mutableIntStateOf(0) }
     var showPdfPeriodDialog by remember { mutableStateOf(false) }
     
     // New Stock Registration Variables
     var newName by remember { mutableStateOf("") }
-    var newSku by remember { mutableStateOf("") }
     var newCategory by remember { mutableStateOf("General") }
     var newStockString by remember { mutableStateOf("5") }
     var newCostString by remember { mutableStateOf("10.00") }
@@ -73,20 +70,15 @@ fun InventoryDashboardScreen(
     var suggestionExplanation by remember { mutableStateOf<String?>(null) }
     var suggestionHasAiIntelligence by remember { mutableStateOf(true) }
 
-    fun fetchAiSuggestions(skuCode: String, nameCode: String = "") {
-        val trimmedSku = skuCode.trim()
+    fun fetchAiSuggestions(nameCode: String = "") {
         val trimmedName = nameCode.trim()
-        if (trimmedSku.isEmpty() && trimmedName.isEmpty()) return
+        if (trimmedName.isEmpty()) return
         isSuggestionsLoading = true
         suggestionExplanation = null
         coroutineScope.launch {
             try {
-                val result = if (trimmedSku.isNotEmpty()) {
-                    GeminiClient.suggestProductForSku(trimmedSku)
-                } else {
-                    GeminiClient.suggestProductForName(trimmedName)
-                }
-                if (trimmedSku.isNotEmpty()) newName = result.name
+                val result = GeminiClient.suggestProductForName(trimmedName)
+                
                 newCategory = result.category
                 newCostString = String.format("%.2f", result.cost)
                 suggestionExplanation = result.explanation
@@ -109,7 +101,7 @@ fun InventoryDashboardScreen(
     // Filtered inventory list
     val filteredItems = remember(items, searchQuery, selectedCategoryFilter) {
         items.filter { item ->
-            val matchSearch = item.name.contains(searchQuery, ignoreCase = true) || item.sku.contains(searchQuery, ignoreCase = true)
+            val matchSearch = item.name.contains(searchQuery, ignoreCase = true)
             val matchCategory = selectedCategoryFilter == "All" || item.category == selectedCategoryFilter
             matchSearch && matchCategory
         }
@@ -126,17 +118,7 @@ fun InventoryDashboardScreen(
     }
     
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onNavigateToScanner() },
-                containerColor = NeonCyan,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
-            ) {
-                Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan Item")
-            }
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -536,60 +518,9 @@ fun InventoryDashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = { manualTabSelection = 0 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (manualTabSelection == 0) NeonCyan else Color(0x3300E5FF)
-                                ),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Standard (With SKU)", color = if (manualTabSelection == 0) OnNeonCyan else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Button(
-                                onClick = { manualTabSelection = 1 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (manualTabSelection == 1) NeonCyan else Color(0x3300E5FF)
-                                ),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Name-Only (No SKU)", color = if (manualTabSelection == 1) OnNeonCyan else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            if (manualTabSelection == 0) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        GlassTextField(
-                                            value = newSku,
-                                            onValueChange = { newSku = it },
-                                            label = "SKU Code / ID",
-                                            placeholder = "e.g. GLASS-X02"
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Button(
-                                        onClick = { fetchAiSuggestions(newSku, newName) },
-                                        enabled = !isSuggestionsLoading && (newSku.isNotBlank() || newName.isNotBlank()),
-                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
-                                        contentPadding = PaddingValues(horizontal = 12.dp)
-                                    ) {
-                                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                                    }
-                                }
-                            }
-
                             // Smart suggestion details or loading status
                             AnimatedVisibility(
                                 visible = isSuggestionsLoading || !suggestionExplanation.isNullOrBlank(),
@@ -619,7 +550,7 @@ fun InventoryDashboardScreen(
                                                 color = NeonCyan
                                             )
                                             Text(
-                                                text = "AI searching typical features for SKU...",
+                                                text = "AI analyzing product features...",
                                                 fontFamily = FontFamily.SansSerif,
                                                 fontSize = 11.sp,
                                                 color = GlassTextPrimary
@@ -669,18 +600,16 @@ fun InventoryDashboardScreen(
                                         placeholder = "e.g. Cobalt Lens Glass"
                                     )
                                 }
-                                if (manualTabSelection == 1) {
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Button(
-                                        onClick = { fetchAiSuggestions("", newName) },
-                                        enabled = !isSuggestionsLoading && newName.isNotBlank(),
-                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
-                                        contentPadding = PaddingValues(horizontal = 12.dp)
-                                    ) {
-                                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
-                                    }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { fetchAiSuggestions(newName) },
+                                    enabled = !isSuggestionsLoading && newName.isNotBlank(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
                                 }
                             }
 
@@ -729,7 +658,7 @@ fun InventoryDashboardScreen(
                                         return@Button
                                     }
                                     
-                                    val finalSku = if (newSku.isBlank()) "MANUAL-${System.currentTimeMillis().toString().takeLast(6)}" else newSku.trim()
+                                    val finalSku = "NAME-${System.currentTimeMillis().toString().takeLast(6)}"
                                     
                                     val stockVal = newStockString.toIntOrNull() ?: 0
                                     val costVal = newCostString.toDoubleOrNull() ?: 0.00
@@ -746,7 +675,6 @@ fun InventoryDashboardScreen(
                                         Toast.makeText(context, "Item registered successfully!", Toast.LENGTH_SHORT).show()
                                         // Reset fields
                                         newName = ""
-                                        newSku = ""
                                         newStockString = "5"
                                         newCostString = "10.00"
                                         newThresholdString = "2"
@@ -775,7 +703,7 @@ fun InventoryDashboardScreen(
                         onValueChange = { searchQuery = it },
                         placeholder = { 
                             Text(
-                                "Search by SKU or item name...", 
+                                "Search by item name...", 
                                 fontFamily = FontFamily.SansSerif, 
                                 color = GlassTextSecondary,
                                 fontSize = 14.sp
