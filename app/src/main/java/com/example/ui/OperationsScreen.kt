@@ -117,6 +117,7 @@ fun OperationsScreen(
 
     if (showStockInDialog) {
         var productName by remember { mutableStateOf("") }
+        var category by remember { mutableStateOf("") }
         var details by remember { mutableStateOf("") }
         var valueStr by remember { mutableStateOf("") }
         var quantityStr by remember { mutableStateOf("") }
@@ -131,6 +132,12 @@ fun OperationsScreen(
                         value = productName,
                         onValueChange = { productName = it },
                         label = { Text("Product Name") },
+                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                    )
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = { category = it },
+                        label = { Text("Category") },
                         colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                     OutlinedTextField(
@@ -181,7 +188,7 @@ fun OperationsScreen(
                                 name = productName.trim(),
                                 sku = "NAME-${System.currentTimeMillis().toString().takeLast(6)}",
                                 initialStock = qty,
-                                category = "General",
+                                category = category.trim().ifBlank { "General" },
                                 cost = v / qty.toDouble(),
                                 lowStockThreshold = 2
                             ) {
