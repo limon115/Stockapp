@@ -183,7 +183,7 @@ object ExportEngine {
         paint.textSize = 9.5f
         
         var currentY = startY + 25f
-        val maxRowsOnPage = 28
+        val maxRowsOnPage = 16
         val limitedItems = items.take(maxRowsOnPage) // Keep report neat on first page
         
         for ((index, item) in limitedItems.withIndex()) {
@@ -230,6 +230,72 @@ object ExportEngine {
         paint.style = Paint.Style.STROKE
         canvas.drawLine(20f, currentY + 6f, (pageWidth - 20).toFloat(), currentY + 6f, paint)
         paint.style = Paint.Style.FILL
+        
+        // 5. Draw simple bar chart for category stock distributions
+        val categoryStocks = items.groupBy { it.category }
+            .mapValues { it.value.sumOf { item -> item.currentStock } }
+            .toList()
+            .sortedByDescending { it.second }
+            .take(5) // Top 5 categories
+        
+        if (categoryStocks.isNotEmpty()) {
+            val maxStock = categoryStocks.maxOf { it.second }.toFloat()
+            val chartStartY = currentY + 45f
+            val chartHeight = 110f
+            val chartStartX = 40f
+            val chartWidth = (pageWidth - 80).toFloat()
+            val maxBarHeight = chartHeight - 20f
+            val barSpacing = chartWidth / categoryStocks.size
+            val barWidth = barSpacing * 0.5f // Adjusted for generous spacing
+            
+            // Graph Title & Header
+            paint.color = Color.parseColor("#0F172A")
+            paint.textSize = 10.5f
+            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            canvas.drawText("CATEGORY STOCK DISTRIBUTION (TOP 5)", chartStartX, chartStartY - 15f, paint)
+            
+            // Y-Axis Horizontal Guide Lines
+            paint.strokeWidth = 0.5f
+            paint.color = Color.parseColor("#E2E8F0")
+            for (i in 0..4 step 2) {
+                val gridY = chartStartY + (chartHeight * i / 4)
+                canvas.drawLine(chartStartX, gridY, chartStartX + chartWidth, gridY, paint)
+            }
+            
+            // X & Y Axis Base Guide Lines
+            paint.strokeWidth = 1.2f
+            paint.color = Color.parseColor("#64748B")
+            canvas.drawLine(chartStartX, chartStartY, chartStartX, chartStartY + chartHeight, paint) // Y-Axis
+            canvas.drawLine(chartStartX, chartStartY + chartHeight, chartStartX + chartWidth, chartStartY + chartHeight, paint) // X-Axis
+            
+            paint.style = Paint.Style.FILL
+            
+            for ((idx, categoryPair) in categoryStocks.withIndex()) {
+                val categoryName = categoryPair.first
+                val categoryVal = categoryPair.second
+                
+                val normalizedHeight = if (maxStock > 0f) (categoryVal / maxStock) * maxBarHeight else 0f
+                
+                val startX = chartStartX + (idx * barSpacing) + (barSpacing - barWidth) / 2
+                val topY = chartStartY + chartHeight - normalizedHeight
+                
+                // Draw bar using aesthetic modern fill
+                paint.color = Color.parseColor("#38BDF8") // Subtle sky blue tint for PDF compatibility
+                canvas.drawRect(startX, topY, startX + barWidth, chartStartY + chartHeight, paint)
+                
+                // Draw category value (Top of bar)
+                paint.color = Color.parseColor("#0F172A")
+                paint.textSize = 8.5f
+                paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                canvas.drawText(categoryVal.toString(), startX + barWidth / 3f, topY - 5f, paint)
+                
+                // Draw category name (Below X-Axis)
+                paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+                paint.color = Color.parseColor("#475569")
+                val shortName = if (categoryName.length > 12) categoryName.substring(0, 10) + ".." else categoryName
+                canvas.drawText(shortName, startX, chartStartY + chartHeight + 14f, paint)
+            }
+        }
         
         // 4. Footer Branding & Attribution (Extremely elegant footer)
         paint.color = Color.parseColor("#475569")

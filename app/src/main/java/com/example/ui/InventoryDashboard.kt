@@ -57,6 +57,7 @@ fun InventoryDashboardScreen(
     
     // Manual registration visibility
     var showManualRegisterForm by remember { mutableStateOf(false) }
+    var manualTabSelection by remember { mutableIntStateOf(0) }
     
     // New Stock Registration Variables
     var newName by remember { mutableStateOf("") }
@@ -71,15 +72,20 @@ fun InventoryDashboardScreen(
     var suggestionExplanation by remember { mutableStateOf<String?>(null) }
     var suggestionHasAiIntelligence by remember { mutableStateOf(true) }
 
-    fun fetchAiSuggestions(skuCode: String) {
-        val trimmed = skuCode.trim()
-        if (trimmed.isEmpty()) return
+    fun fetchAiSuggestions(skuCode: String, nameCode: String = "") {
+        val trimmedSku = skuCode.trim()
+        val trimmedName = nameCode.trim()
+        if (trimmedSku.isEmpty() && trimmedName.isEmpty()) return
         isSuggestionsLoading = true
         suggestionExplanation = null
         coroutineScope.launch {
             try {
-                val result = GeminiClient.suggestProductForSku(trimmed)
-                newName = result.name
+                val result = if (trimmedSku.isNotEmpty()) {
+                    GeminiClient.suggestProductForSku(trimmedSku)
+                } else {
+                    GeminiClient.suggestProductForName(trimmedName)
+                }
+                if (trimmedSku.isNotEmpty()) newName = result.name
                 newCategory = result.category
                 newCostString = String.format("%.2f", result.cost)
                 suggestionExplanation = result.explanation
@@ -527,33 +533,59 @@ fun InventoryDashboardScreen(
                             fontSize = 12.sp,
                             color = NeonCyan
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { manualTabSelection = 0 },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (manualTabSelection == 0) NeonCyan else Color(0x3300E5FF)
+                                ),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Standard (With SKU)", color = if (manualTabSelection == 0) Black else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = { manualTabSelection = 1 },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (manualTabSelection == 1) NeonCyan else Color(0x3300E5FF)
+                                ),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Name-Only (No SKU)", color = if (manualTabSelection == 1) Black else NeonCyan, fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    GlassTextField(
-                                        value = newSku,
-                                        onValueChange = { newSku = it },
-                                        label = "SKU Code / ID",
-                                        placeholder = "e.g. GLASS-X02"
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
-                                    onClick = { fetchAiSuggestions(newSku) },
-                                    enabled = !isSuggestionsLoading && newSku.isNotBlank(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                            if (manualTabSelection == 0) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        GlassTextField(
+                                            value = newSku,
+                                            onValueChange = { newSku = it },
+                                            label = "SKU Code / ID",
+                                            placeholder = "e.g. GLASS-X02"
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = { fetchAiSuggestions(newSku, newName) },
+                                        enabled = !isSuggestionsLoading && (newSku.isNotBlank() || newName.isNotBlank()),
+                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                                        contentPadding = PaddingValues(horizontal = 12.dp)
+                                    ) {
+                                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                                    }
                                 }
                             }
 
@@ -624,12 +656,32 @@ fun InventoryDashboardScreen(
                                 }
                             }
 
-                            GlassTextField(
-                                value = newName,
-                                onValueChange = { newName = it },
-                                label = "Item/Product Name",
-                                placeholder = "e.g. Cobalt Lens Glass"
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    GlassTextField(
+                                        value = newName,
+                                        onValueChange = { newName = it },
+                                        label = "Item/Product Name",
+                                        placeholder = "e.g. Cobalt Lens Glass"
+                                    )
+                                }
+                                if (manualTabSelection == 1) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = { fetchAiSuggestions("", newName) },
+                                        enabled = !isSuggestionsLoading && newName.isNotBlank(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                                        contentPadding = PaddingValues(horizontal = 12.dp)
+                                    ) {
+                                        Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("AI Suggest", fontSize = 11.sp, fontFamily = FontFamily.SansSerif)
+                                    }
+                                }
+                            }
 
                             GlassTextField(
                                 value = newCategory,
@@ -671,10 +723,12 @@ fun InventoryDashboardScreen(
 
                             Button(
                                 onClick = {
-                                    if (newName.isBlank() || newSku.isBlank()) {
-                                        Toast.makeText(context, "Requires valid Name & SKU coordinates", Toast.LENGTH_SHORT).show()
+                                    if (newName.isBlank()) {
+                                        Toast.makeText(context, "Requires valid Name", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
+                                    
+                                    val finalSku = if (newSku.isBlank()) "MANUAL-${System.currentTimeMillis().toString().takeLast(6)}" else newSku.trim()
                                     
                                     val stockVal = newStockString.toIntOrNull() ?: 0
                                     val costVal = newCostString.toDoubleOrNull() ?: 0.00
@@ -682,7 +736,7 @@ fun InventoryDashboardScreen(
                                     
                                     viewModel.addItem(
                                         name = newName,
-                                        sku = newSku.trim(),
+                                        sku = finalSku,
                                         initialStock = stockVal,
                                         category = newCategory.trim(),
                                         cost = costVal,

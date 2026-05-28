@@ -210,6 +210,82 @@ object GeminiClient {
         )
     }
 
+    suspend fun suggestProductForName(productName: String): SkuProductSuggestion {
+        val trimmedName = productName.trim()
+        if (trimmedName.isEmpty()) {
+            return SkuProductSuggestion(
+                name = "Unknown Product",
+                category = "Manual Entry",
+                cost = 0.0,
+                explanation = "Empty product name passed.",
+                hasAiIntelligence = false
+            )
+        }
+
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+            Log.w(TAG, "Gemini API key is unconfigured. Returning default classification.")
+            return SkuProductSuggestion(
+                name = trimmedName,
+                category = "Unclassified",
+                cost = 0.0,
+                explanation = "Manual entry. (Gemini API Key unconfigured)",
+                hasAiIntelligence = false
+            )
+        }
+
+        val prompt = """
+            You are an expert commercial retail classification system.
+            The user has manually entered the product name: "$trimmedName" without a SKU.
+            Your task is to classify this exact product name and strictly format it into our existing JSON structure.
+            Provide:
+            1. "name": Use a slightly cleaned/nicer version of "$trimmedName" if needed.
+            2. "category": A broad, industry-standard category (e.g. "Beverages", "Spices", "Electronics").
+            3. "cost": Estimate a realistic wholesale item-cost (floating-point double in Bangladesh Taka/BDT).
+            4. "explanation": A 1-sentence explanation of why it fits this category based on the name.
+            
+            Respond only with a single, valid JSON object in the exact structure below. Avoid markdown, wrap, trailing commas, or any extra text.
+            {
+              "name": "Product Name",
+              "category": "Product Category",
+              "cost": 150.00,
+              "explanation": "Specific category matching based on name."
+            }
+        """.trimIndent()
+
+        try {
+            val requestPayload = GeminiRequest(
+                contents = listOf(
+                    GeminiContent(
+                        parts = listOf(GeminiPart(prompt))
+                    )
+                )
+            )
+
+            val response = apiService.generateContent(apiKey, requestPayload)
+            val jsonText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+            
+            if (!jsonText.isNullOrBlank()) {
+                val adapter = moshi.adapter(SkuProductSuggestion::class.java).failOnUnknown()
+                val cleanedJsonText = cleanMarkdownFences(jsonText)
+                val parsed = adapter.fromJson(cleanedJsonText)
+                if (parsed != null) {
+                    return parsed.copy(hasAiIntelligence = true)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Gemini API service invocation failed for product name: ${e.message}", e)
+        }
+
+        return SkuProductSuggestion(
+            name = trimmedName,
+            category = "Unclassified",
+            cost = 0.0,
+            explanation = "Manual prediction failed.",
+            hasAiIntelligence = false
+        )
+    }
+
     private fun cleanMarkdownFences(rawText: String): String {
         var clean = rawText.trim()
         if (clean.startsWith("```json")) {
