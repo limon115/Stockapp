@@ -85,6 +85,15 @@ object ExportEngine {
         
         val pdfDocument = PdfDocument()
         
+        val baseTypeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+        val boldTypeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        val banglaTypeface = try {
+            Typeface.createFromAsset(context.assets, "fonts/sutonny_mj.ttf")
+        } catch(e: Exception) {
+            baseTypeface
+        }
+        val banglaBoldTypeface = Typeface.create(banglaTypeface, Typeface.BOLD)
+        
         // A4 Paper Dimensions in Points: Width = 595, Height = 842
         val pageWidth = 595
         val pageHeight = 842
@@ -98,140 +107,119 @@ object ExportEngine {
         canvas.drawColor(Color.WHITE)
         
         // Draw Header Border with a clean thin charcoal accent line
-        paint.color = Color.parseColor("#E2E8F0") // Light border
+        paint.color = Color.BLACK
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 1f
         canvas.drawRect(20f, 20f, (pageWidth - 20).toFloat(), 130f, paint)
-        
-        // Highlight subtle line below the header 
-        paint.color = Color.parseColor("#0F172A") // Deep charcoal
-        paint.strokeWidth = 2f
-        canvas.drawLine(20f, 130f, (pageWidth - 20).toFloat(), 130f, paint)
         
         // Reset paint style
         paint.style = Paint.Style.FILL
         
         // 2. Title Typography - High-contrast black/charcoal
-        paint.color = Color.parseColor("#0F172A")
+        paint.color = Color.BLACK
         paint.textSize = 20f
         paint.isAntiAlias = true
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        canvas.drawText("GLASSLOG INVENTORY", 40f, 60f, paint)
+        paint.typeface = boldTypeface
+        canvas.drawText("GLASSLOG INVENTORY", 30f, 50f, paint)
         
-        paint.color = Color.parseColor("#475569") // Slate Gray
         paint.textSize = 10f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-        canvas.drawText("Enterprise Resource Management System", 40f, 80f, paint)
+        paint.typeface = baseTypeface
+        canvas.drawText("Enterprise Resource Management System", 30f, 70f, paint)
         
-        paint.color = Color.parseColor("#64748B") // Muted Slate
-        canvas.drawText("Developed by Khalid Hasan Limon", 40f, 95f, paint)
+        canvas.drawText("Developed by Khalid Hasan Limon", 30f, 90f, paint)
         
         // Generation Date Indicator
-        paint.color = Color.parseColor("#475569")
         paint.textSize = 9f
-        canvas.drawText("Report Generated: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()) + " | Period: $periodTitle", 40f, 115f, paint)
-        
-        // Metrics Summary Frame inside Header (Pure B&W light theme style)
-        paint.color = Color.parseColor("#F8FAFC") // Very light background tint
-        canvas.drawRect((pageWidth - 240).toFloat(), 25f, (pageWidth - 25).toFloat(), 125f, paint)
-        
-        paint.color = Color.parseColor("#E2E8F0")
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1f
-        canvas.drawRect((pageWidth - 240).toFloat(), 25f, (pageWidth - 25).toFloat(), 125f, paint)
-        
-        // Reset style
-        paint.style = Paint.Style.FILL
+        canvas.drawText("Report Generated: " + SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()) + " | Period: $periodTitle", 30f, 115f, paint)
         
         // Drawing Summary Metrics inside Box
         val totalValuation = items.sumOf { it.currentStock * it.cost }
-        paint.color = Color.parseColor("#0F172A")
+        paint.color = Color.BLACK
         paint.textSize = 11f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        canvas.drawText("TOTAL VALUE: ৳${String.format(Locale.US, "%.2f", totalValuation)}", (pageWidth - 230).toFloat(), 55f, paint)
+        paint.typeface = boldTypeface
+        canvas.drawText("TOTAL VALUE: ৳${String.format(Locale.US, "%.2f", totalValuation)}", (pageWidth - 230).toFloat(), 50f, paint)
         
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+        paint.typeface = baseTypeface
         paint.textSize = 10f
-        paint.color = Color.parseColor("#475569")
-        canvas.drawText("Total Unique SKUs: ${items.size}", (pageWidth - 230).toFloat(), 80f, paint)
-        canvas.drawText("Total Items Instock: ${items.sumOf { it.currentStock }}", (pageWidth - 230).toFloat(), 105f, paint)
+        canvas.drawText("Total Unique SKUs: ${items.size}", (pageWidth - 230).toFloat(), 75f, paint)
+        canvas.drawText("Total Items Instock: ${items.sumOf { it.currentStock }}", (pageWidth - 230).toFloat(), 95f, paint)
         
         // 3. Table Column Headers
-        val startY = 160f
-        paint.color = Color.parseColor("#F1F5F9") // Light gray header bg
-        canvas.drawRect(20f, startY, (pageWidth - 20).toFloat(), startY + 25f, paint)
+        val startY = 150f
         
-        // Outer table horizontal border lines for visual structure
-        paint.color = Color.parseColor("#0F172A") // Table boundary accent
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1.5f
-        canvas.drawLine(20f, startY, (pageWidth - 20).toFloat(), startY, paint)
-        canvas.drawLine(20f, startY + 25f, (pageWidth - 20).toFloat(), startY + 25f, paint)
+        // MS Word Border=1 Settings
+        val col1 = 20f
+        val col2 = 175f
+        val col3 = 275f
+        val col4 = 375f
+        val col5 = 445f
+        val col6 = 510f
+        val col7 = (pageWidth - 20).toFloat()
         
-        // Reset paint parameters
         paint.style = Paint.Style.FILL
-        paint.color = Color.parseColor("#0F172A") // Strong black text for columns
+        paint.color = Color.BLACK
         paint.textSize = 10f
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+        paint.typeface = boldTypeface
         
-        canvas.drawText("NAME", 35f, startY + 16f, paint)
-        canvas.drawText("SKU", 185f, startY + 16f, paint)
-        canvas.drawText("CATEGORY", 285f, startY + 16f, paint)
-        canvas.drawText("STOCK", 395f, startY + 16f, paint)
-        canvas.drawText("COST", 455f, startY + 16f, paint)
-        canvas.drawText("TOTAL", 515f, startY + 16f, paint)
+        canvas.drawText("NAME", col1 + 5f, startY + 16f, paint)
+        canvas.drawText("SKU", col2 + 5f, startY + 16f, paint)
+        canvas.drawText("CATEGORY", col3 + 5f, startY + 16f, paint)
+        canvas.drawText("STOCK", col4 + 5f, startY + 16f, paint)
+        canvas.drawText("COST", col5 + 5f, startY + 16f, paint)
+        canvas.drawText("TOTAL", col6 + 5f, startY + 16f, paint)
         
-        // Draw Row Items with clean white background and solid alternating rows
-        paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-        paint.textSize = 9.5f
+        paint.typeface = banglaTypeface
+        paint.textSize = 10f
         
         var currentY = startY + 25f
-        val maxRowsOnPage = 16
+        val maxRowsOnPage = 18
         val limitedItems = items.take(maxRowsOnPage) // Keep report neat on first page
         
+        // Draw top horizontal line for header
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1f
+        canvas.drawLine(col1, startY, col7, startY, paint)
+        canvas.drawLine(col1, currentY, col7, currentY, paint)
+        
         for ((index, item) in limitedItems.withIndex()) {
+            paint.style = Paint.Style.FILL
+            paint.color = Color.BLACK 
             currentY += 21f
-            
-            // Draw matching clean elegant dividers below each item or background shading
-            if (index % 2 == 1) {
-                paint.color = Color.parseColor("#F8FAFC") // Ultra-light aesthetic gray fill
-                canvas.drawRect(20f, currentY - 15f, (pageWidth - 20).toFloat(), currentY + 6f, paint)
-            } else {
-                paint.color = Color.parseColor("#F1F5F9") // Thin separation lines
-                paint.strokeWidth = 0.5f
-                paint.style = Paint.Style.STROKE
-                canvas.drawLine(20f, currentY + 6f, (pageWidth - 20).toFloat(), currentY + 6f, paint)
-                paint.style = Paint.Style.FILL
-            }
-            
-            paint.color = Color.parseColor("#0F172A") // Dark text for B&W readability
             
             // Name auto-truncating elegant formatting
             val displayName = if (item.name.length > 20) item.name.substring(0, 17) + "..." else item.name
-            canvas.drawText(displayName, 35f, currentY, paint)
-            canvas.drawText(item.sku, 185f, currentY, paint)
-            canvas.drawText(item.category, 285f, currentY, paint)
+            canvas.drawText(displayName, col1 + 5f, currentY - 5f, paint)
+            canvas.drawText(item.sku, col2 + 5f, currentY - 5f, paint)
+            canvas.drawText(item.category, col3 + 5f, currentY - 5f, paint)
             
             // Bold stock indicator if stock is very low
             if (item.currentStock <= 5) {
-                paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                paint.typeface = banglaBoldTypeface
             }
-            canvas.drawText(item.currentStock.toString(), 395f, currentY, paint)
-            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            canvas.drawText(item.currentStock.toString(), col4 + 5f, currentY - 5f, paint)
+            paint.typeface = banglaTypeface
             
-            canvas.drawText("৳${String.format(Locale.US, "%.2f", item.cost)}", 455f, currentY, paint)
+            canvas.drawText("৳${String.format(Locale.US, "%.2f", item.cost)}", col5 + 5f, currentY - 5f, paint)
             
             val totalValue = item.currentStock * item.cost
-            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            canvas.drawText("৳${String.format(Locale.US, "%.2f", totalValue)}", 515f, currentY, paint)
-            paint.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+            paint.typeface = banglaBoldTypeface
+            canvas.drawText("৳${String.format(Locale.US, "%.2f", totalValue)}", col6 + 5f, currentY - 5f, paint)
+            paint.typeface = banglaTypeface
+            
+            // Draw horizontal line below item cell
+            paint.style = Paint.Style.STROKE
+            canvas.drawLine(col1, currentY, col7, currentY, paint)
         }
         
-        // Draw bottom boundary horizontal line for table closure
-        paint.color = Color.parseColor("#0F172A")
-        paint.strokeWidth = 1f
+        // Draw Vertical Border Lines for table grid
         paint.style = Paint.Style.STROKE
-        canvas.drawLine(20f, currentY + 6f, (pageWidth - 20).toFloat(), currentY + 6f, paint)
+        canvas.drawRect(col1, startY, col7, currentY, paint)
+        canvas.drawLine(col2, startY, col2, currentY, paint)
+        canvas.drawLine(col3, startY, col3, currentY, paint)
+        canvas.drawLine(col4, startY, col4, currentY, paint)
+        canvas.drawLine(col5, startY, col5, currentY, paint)
+        canvas.drawLine(col6, startY, col6, currentY, paint)
+        
         paint.style = Paint.Style.FILL
         
         // 5. Draw simple bar chart for category stock distributions
@@ -335,63 +323,83 @@ object ExportEngine {
             
             canvas2.drawColor(Color.WHITE)
             
-            paint2.color = Color.parseColor("#0F172A")
+            paint2.color = Color.BLACK
             paint2.textSize = 16f
             paint2.isAntiAlias = true
-            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            paint2.typeface = boldTypeface
             canvas2.drawText("AUDIT TRANSACTION LOGS ($periodTitle)", 40f, 60f, paint2)
             
             val startY2 = 100f
-            paint2.color = Color.parseColor("#F1F5F9")
-            canvas2.drawRect(20f, startY2, (pageWidth - 20).toFloat(), startY2 + 25f, paint2)
             
-            paint2.color = Color.parseColor("#0F172A")
+            // MS Word Style Table border lines settings
+            val col1 = 20f
+            val col2 = 110f
+            val col3 = 210f
+            val col4 = 260f
+            val col5 = 310f
+            val col6 = (pageWidth - 20).toFloat()
+            
+            paint2.color = Color.BLACK
             paint2.style = Paint.Style.STROKE
-            paint2.strokeWidth = 1.5f
-            canvas2.drawLine(20f, startY2, (pageWidth - 20).toFloat(), startY2, paint2)
-            canvas2.drawLine(20f, startY2 + 25f, (pageWidth - 20).toFloat(), startY2 + 25f, paint2)
+            paint2.strokeWidth = 1f
+            // top line header
+            canvas2.drawLine(col1, startY2, col6, startY2, paint2)
             
             paint2.style = Paint.Style.FILL
             paint2.textSize = 10f
-            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            paint2.typeface = boldTypeface
             
-            canvas2.drawText("DATE/TIME", 30f, startY2 + 16f, paint2)
-            canvas2.drawText("PRODUCT", 125f, startY2 + 16f, paint2)
-            canvas2.drawText("TYPE", 225f, startY2 + 16f, paint2)
-            canvas2.drawText("QTY", 280f, startY2 + 16f, paint2)
-            canvas2.drawText("DETAILS", 330f, startY2 + 16f, paint2)
+            canvas2.drawText("DATE/TIME", col1 + 5f, startY2 + 16f, paint2)
+            canvas2.drawText("PRODUCT", col2 + 5f, startY2 + 16f, paint2)
+            canvas2.drawText("TYPE", col3 + 5f, startY2 + 16f, paint2)
+            canvas2.drawText("QTY", col4 + 5f, startY2 + 16f, paint2)
+            canvas2.drawText("DETAILS", col5 + 5f, startY2 + 16f, paint2)
             
-            paint2.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-            paint2.textSize = 9.5f
+            paint2.typeface = banglaTypeface
+            paint2.textSize = 10f
             
             var currentY2 = startY2 + 25f
-            val limitedLogs = periodLogs.take(35) // limited mapping 
+            val limitedLogs = periodLogs.take(30) 
             val logSdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
             
+            // Draw horizontal line after header
+            paint2.style = Paint.Style.STROKE
+            canvas2.drawLine(col1, currentY2, col6, currentY2, paint2)
+            
             for (log in limitedLogs) {
+                paint2.style = Paint.Style.FILL
+                paint2.color = Color.BLACK
                 currentY2 += 22f
                 
                 val dateStr = logSdf.format(Date(log.timestamp))
-                canvas2.drawText(dateStr, 30f, currentY2, paint2)
+                canvas2.drawText(dateStr, col1 + 5f, currentY2 - 6f, paint2)
                 
-                val shortSku = if (log.productName.length > 12) log.productName.substring(0, 10) + ".." else log.productName
-                canvas2.drawText(shortSku, 125f, currentY2, paint2)
+                val shortSku = if (log.productName.length > 15) log.productName.substring(0, 13) + ".." else log.productName
+                canvas2.drawText(shortSku, col2 + 5f, currentY2 - 6f, paint2)
                 
                 paint2.color = if (log.transactionType == "IN") Color.parseColor("#059669") else Color.parseColor("#E11D48")
-                canvas2.drawText(log.transactionType, 225f, currentY2, paint2)
+                canvas2.drawText(log.transactionType, col3 + 5f, currentY2 - 6f, paint2)
                 
-                paint2.color = Color.parseColor("#0F172A")
+                paint2.color = Color.BLACK
                 val qtySign = if (log.transactionType == "IN") "+" else "-"
-                canvas2.drawText("$qtySign${log.quantityChanged}", 280f, currentY2, paint2)
+                canvas2.drawText("$qtySign${log.quantityChanged}", col4 + 5f, currentY2 - 6f, paint2)
                 
-                val detailsStr = if (log.details.isBlank()) "None" else if (log.details.length > 35) log.details.substring(0, 32) + "..." else log.details
-                canvas2.drawText(detailsStr, 330f, currentY2, paint2)
+                val detailsStr = if (log.details.isBlank()) "None" else if (log.details.length > 45) log.details.substring(0, 42) + "..." else log.details
+                canvas2.drawText(detailsStr, col5 + 5f, currentY2 - 6f, paint2)
                 
-                paint2.color = Color.parseColor("#F1F5F9")
-                paint2.strokeWidth = 0.5f
-                canvas2.drawLine(20f, currentY2 + 6f, (pageWidth - 20).toFloat(), currentY2 + 6f, paint2)
-                paint2.color = Color.parseColor("#475569")
+                // Row bottom horizontal line
+                paint2.style = Paint.Style.STROKE
+                canvas2.drawLine(col1, currentY2, col6, currentY2, paint2)
             }
+            
+            // Vertical Border Lines
+            paint2.style = Paint.Style.STROKE
+            paint2.color = Color.BLACK
+            canvas2.drawRect(col1, startY2, col6, currentY2, paint2)
+            canvas2.drawLine(col2, startY2, col2, currentY2, paint2)
+            canvas2.drawLine(col3, startY2, col3, currentY2, paint2)
+            canvas2.drawLine(col4, startY2, col4, currentY2, paint2)
+            canvas2.drawLine(col5, startY2, col5, currentY2, paint2)
             
             // Footer
             paint2.strokeWidth = 0.8f
@@ -417,6 +425,19 @@ object ExportEngine {
         mimeType: String,
         data: ByteArray
     ): String? {
+        if (BackupRestoreManager.hasStoragePermission(context)) {
+            BackupRestoreManager.initializeDirectories()
+            val targetFile = File(BackupRestoreManager.reportsDir, fileName)
+            try {
+                val out = FileOutputStream(targetFile)
+                out.write(data)
+                out.close()
+                return targetFile.absolutePath
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
         val resolver = context.contentResolver
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val contentValues = ContentValues().apply {
@@ -461,6 +482,19 @@ object ExportEngine {
         pdfDocument: PdfDocument,
         fileName: String
     ): String? {
+        if (BackupRestoreManager.hasStoragePermission(context)) {
+            BackupRestoreManager.initializeDirectories()
+            val targetFile = File(BackupRestoreManager.reportsDir, fileName)
+            try {
+                val out = FileOutputStream(targetFile)
+                pdfDocument.writeTo(out)
+                out.close()
+                return targetFile.absolutePath
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         val resolver = context.contentResolver
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val contentValues = ContentValues().apply {

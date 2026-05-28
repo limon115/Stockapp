@@ -14,6 +14,15 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        fun closeDatabase() {
+            INSTANCE?.let {
+                if (it.isOpen) {
+                    it.close()
+                }
+            }
+            INSTANCE = null
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
