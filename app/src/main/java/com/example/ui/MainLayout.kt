@@ -101,8 +101,8 @@ fun MainLayoutScreen(
             AnimatedContent(
                 targetState = activeTab,
                 transitionSpec = {
-                    (fadeIn(animationSpec = spring()) + scaleIn(initialScale = 0.96f)) togetherWith 
-                    (fadeOut(animationSpec = spring()) + scaleOut(targetScale = 0.96f))
+                    (fadeIn(animationSpec = tween(400)) + slideIntoContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400))) togetherWith 
+                    (fadeOut(animationSpec = tween(400)) + slideOutOfContainer(towards = AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(400)))
                 },
                 label = "panel_view_shift"
             ) { targetTab ->

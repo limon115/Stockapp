@@ -329,9 +329,13 @@ fun LineChartCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
+    var startAnim by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        startAnim = true
+    }
     val animatedProgress = animateFloatAsState(
-        targetValue = 1f,
-        animationSpec = tween(durationMillis = 800),
+        targetValue = if (startAnim) 1f else 0f,
+        animationSpec = tween(durationMillis = 1000),
         label = "line_chart_reveal"
     )
     
@@ -400,9 +404,9 @@ fun LineChartCanvas(
         // Project coordinate points to Canvas space
         val pixelPoints = points.map { pt ->
             val xRatio = if (timeSpan == 0L) 0.5f else (pt.first - minX).toFloat() / timeSpan
-            val yRatio = (pt.second - minY) / valueSpan
+            val yRatio = ((pt.second - minY) / valueSpan) * animatedProgress.value
             
-            val xPx = paddingLeft + xRatio * chartWidth
+            val xPx = paddingLeft + (xRatio * chartWidth) * animatedProgress.value // Sweep in from left
             val yPx = height - paddingBottom - yRatio * chartHeight
             Offset(xPx, yPx)
         }
@@ -488,6 +492,16 @@ fun BarChartCanvas(
     modifier: Modifier = Modifier
 ) {
     val textMeasurer = rememberTextMeasurer()
+    var startAnim by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        startAnim = true
+    }
+    val animatedProgress = animateFloatAsState(
+        targetValue = if (startAnim) 1f else 0f,
+        animationSpec = tween(durationMillis = 800),
+        label = "bar_chart_reveal"
+    )
+
     val isDark = LocalIsDarkTheme.current
     val labelColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF475569)
 
@@ -533,7 +547,7 @@ fun BarChartCanvas(
         val spacing = totalSpacing / (barCount + 1).coerceAtLeast(1)
 
         logs.forEachIndexed { index, log ->
-            val ratio = log.quantityChanged.toFloat() / maxY
+            val ratio = (log.quantityChanged.toFloat() / maxY) * animatedProgress.value
             val barHeight = ratio * chartHeight
             val color = if (log.transactionType == "IN") AccentGreen else AccentRed
             
@@ -541,7 +555,7 @@ fun BarChartCanvas(
             val yPx = height - paddingBottom - barHeight
             
             drawRect(
-                color = color.copy(alpha = 0.85f),
+                color = color.copy(alpha = 0.85f * animatedProgress.value),
                 topLeft = Offset(xPx, yPx),
                 size = Size(barWidth, barHeight)
             )
