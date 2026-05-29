@@ -362,7 +362,7 @@ object ExportEngine {
                     paint2.typeface = baseTypeface
                     canvas2.drawText(dateStr, col1 + 5f, currentY2 - 6f, paint2)
 
-                    val shortSku = if (log.productName.length > 15) log.productName.substring(0, 13) + ".." else log.productName
+                    val shortSku = if (log.productName.length > 13) log.productName.substring(0, 11) + ".." else log.productName
                     paint2.typeface = if (shortSku.any { it.toInt() in 0x0980..0x09FF }) banglaTypeface else baseTypeface
                     canvas2.drawText(shortSku, col2 + 5f, currentY2 - 6f, paint2)
 
@@ -374,7 +374,7 @@ object ExportEngine {
                     val qtySign = if (log.transactionType == "IN") "+" else "-"
                     canvas2.drawText("$qtySign${log.quantityChanged}", col4 + 5f, currentY2 - 6f, paint2)
 
-                    val detailsStr = if (log.details.isBlank()) "None" else if (log.details.length > 45) log.details.substring(0, 42) + "..." else log.details
+                    val detailsStr = if (log.details.isBlank()) "None" else if (log.details.length > 22) log.details.substring(0, 20) + ".." else log.details
                     paint2.typeface = if (detailsStr.any { it.toInt() in 0x0980..0x09FF }) banglaTypeface else baseTypeface
                     canvas2.drawText(detailsStr, col5 + 5f, currentY2 - 6f, paint2)
 
