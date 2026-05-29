@@ -353,26 +353,33 @@ fun OperationsScreen(
             title = { Text("Deduct Stock", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box {
-                        OutlinedTextField(
-                            value = selectedItem?.name ?: "Select Product",
-                            onValueChange = { },
-                            readOnly = true,
-                            enabled = false,
-                            modifier = Modifier.clickable { expanded = true }.fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(
-                                disabledTextColor = GlassTextPrimary,
-                                disabledContainerColor = Color.Transparent,
-                                disabledIndicatorColor = GlassBorderColor
-                            ),
-                            label = { Text("Choose Product") }
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = selectedItem?.name ?: "Select Product",
+                                onValueChange = { },
+                                readOnly = true,
+                                enabled = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                ),
+                                label = { Text("Choose Product") }
+                            )
+                            // Transparent overlay to catch clicks
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(Color.Transparent)
+                                    .clickable { expanded = true }
+                            )
+                        }
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
                             modifier = Modifier.background(DynamicMenuBackground)
                         ) {
-                            items.forEach { item ->
+                            items.take(100).forEach { item ->
                                 DropdownMenuItem(
                                     text = { Text("${item.name} (${item.currentStock} in stock)", color = GlassTextPrimary) },
                                     onClick = {
@@ -382,7 +389,6 @@ fun OperationsScreen(
                                 )
                             }
                         }
-                    }
                     
                     OutlinedTextField(
                         value = quantityStr,
