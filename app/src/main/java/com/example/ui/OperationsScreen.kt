@@ -230,6 +230,20 @@ fun OperationsScreen(
         var valueStr by remember { mutableStateOf("") }
         var quantityStr by remember { mutableStateOf("") }
 
+        val existingItem = remember(productName, items) { 
+            items.find { it.name.equals(productName.trim(), ignoreCase = true) } 
+        }
+
+        LaunchedEffect(quantityStr, existingItem) {
+            if (existingItem != null) {
+                val qty = quantityStr.toIntOrNull() ?: 0
+                if (qty > 0) {
+                    val totalValue = qty * existingItem.cost
+                    valueStr = String.format(java.util.Locale.US, "%.2f", totalValue)
+                }
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { showStockInDialog = false },
             containerColor = DynamicCardBackground,
@@ -320,6 +334,18 @@ fun OperationsScreen(
         var details by remember { mutableStateOf("") }
         var valueStr by remember { mutableStateOf("") }
         var quantityStr by remember { mutableStateOf("") }
+
+        LaunchedEffect(quantityStr, selectedItem) {
+            if (selectedItem != null) {
+                val qty = quantityStr.toIntOrNull() ?: 0
+                if (qty > 0) {
+                    val totalValue = qty * selectedItem!!.cost
+                    valueStr = String.format(java.util.Locale.US, "%.2f", totalValue)
+                } else {
+                    valueStr = ""
+                }
+            }
+        }
 
         AlertDialog(
             onDismissRequest = { showStockOutDialog = false },
