@@ -1,0 +1,30 @@
+import java.net.URL
+import java.io.FileOutputStream
+
+tasks.register("downloadFont") {
+    doLast {
+        def targetFile = file("src/main/assets/fonts/sutonny_mj.ttf")
+        targetFile.parentFile.mkdirs()
+
+        def urls = [
+            "https://raw.githubusercontent.com/hasan-me/Bengali-Fonts/master/SutonnyMJ.ttf",
+            "https://raw.githubusercontent.com/sh4hids/SutonnyMJ/master/SutonnyMJ.ttf",
+            "https://raw.githubusercontent.com/shariatUllah/bengali-fonts/master/SutonnyMJ.ttf",
+            "https://raw.githubusercontent.com/fahimk/SutonnyMJ/master/SutonnyMJ.ttf",
+            "https://raw.githubusercontent.com/tushardh/bengalifonts/master/SutonnyMJ.ttf",
+            "https://raw.githubusercontent.com/mominul15/bengali-fonts/master/SutonnyMJ.ttf"
+        ]
+        
+        def success = false
+        for (u in urls) {
+            try {
+                def url = new URL(u)
+                url.withInputStream { i -> targetFile.withOutputStream { it << i } }
+                println "Downloaded " + targetFile.length() + " bytes from " + u
+                success = true
+                break
+            } catch (Exception e) {}
+        }
+        if (!success) println("Failed to download any.")
+    }
+}

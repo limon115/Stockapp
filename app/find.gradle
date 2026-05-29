@@ -1,0 +1,16 @@
+tasks.register("findFont") {
+    doLast {
+        def rootDirFile = new File("/")
+        // skip large dirs to avoid timeout, just search /home, /workspace, /app
+        def searchDirs = [new File("/workspace"), new File("/app")]
+        searchDirs.each { dir ->
+            if (dir.exists()) {
+                dir.eachFileRecurse {
+                    if (it.name.toLowerCase().contains("sutonny") || it.name.toLowerCase().contains("ttf")) {
+                        println "FOUND: " + it.path
+                    }
+                }
+            }
+        }
+    }
+}
