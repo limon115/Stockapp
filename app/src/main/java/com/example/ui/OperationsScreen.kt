@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +40,16 @@ fun OperationsScreen(
     val context = LocalContext.current
     var showStockInDialog by remember { mutableStateOf(false) }
     var showStockOutDialog by remember { mutableStateOf(false) }
+    var showPdfPeriodDialog by remember { mutableStateOf(false) }
+
+    val exportMsg by viewModel.exportMessage.collectAsState()
+
+    LaunchedEffect(exportMsg) {
+        if (exportMsg != null) {
+            Toast.makeText(context, exportMsg, Toast.LENGTH_LONG).show()
+            viewModel.clearExportMessage()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -110,6 +122,102 @@ fun OperationsScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("Deduct Stock", fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, color = GlassTextPrimary)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 3. Document Extraction Suite (Enterprise PDF / CSV exports)
+        ElevatedCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = DynamicCardSecondary
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "ENTERPRISE DOCUMENT EXPORT ENGINE",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = NeonCyan,
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // CSV Button
+                    Button(
+                        onClick = { viewModel.triggerCsvExport(context) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GlassWhite
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .border(1.dp, NeonCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowUpward,
+                                contentDescription = "Export CSV",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Export CSV",
+                                fontFamily = FontFamily.SansSerif,
+                                fontSize = 12.sp,
+                                color = NeonCyan,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    // PDF Button
+                    Button(
+                        onClick = { showPdfPeriodDialog = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NeonCyan
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDownward,
+                                contentDescription = "Render PDF",
+                                tint = OnNeonCyan,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Render PDF",
+                                fontFamily = FontFamily.SansSerif,
+                                fontSize = 12.sp,
+                                color = OnNeonCyan,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -297,6 +405,51 @@ fun OperationsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStockOutDialog = false }) { Text("Cancel", color = GlassTextSecondary) }
+            }
+        )
+    }
+
+    if (showPdfPeriodDialog) {
+        AlertDialog(
+            onDismissRequest = { showPdfPeriodDialog = false },
+            containerColor = DynamicCardBackground,
+            title = {
+                Text("PDF Report Extraction", color = GlassTextPrimary, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column {
+                    Text("Select a specialized period to construct a targeted report inclusive of Audit Transaction logs within that timeframe.", color = GlassTextSecondary, fontSize = 13.sp)
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = { 
+                            viewModel.triggerPdfExport(context, 7)
+                            showPdfPeriodDialog = false 
+                        }, 
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                    ) { Text("Last 7 Days Activity", color = NeonCyan) }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { 
+                            viewModel.triggerPdfExport(context, 30)
+                            showPdfPeriodDialog = false 
+                        }, 
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                    ) { Text("Last 30 Days Monthly", color = NeonCyan) }
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { 
+                            viewModel.triggerPdfExport(context, null)
+                            showPdfPeriodDialog = false 
+                        }, 
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
+                    ) { Text("Master Enterprise All-Time", color = Color.White, fontWeight = FontWeight.Bold) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPdfPeriodDialog = false }) { Text("Cancel", color = AccentGreen) }
             }
         )
     }

@@ -46,22 +46,12 @@ fun InventoryDashboardScreen(
     
     val items by viewModel.inventoryState.collectAsState()
     val logs by viewModel.auditLogsState.collectAsState()
-    val exportMsg by viewModel.exportMessage.collectAsState()
-
-    // Clear alerts on triggers
-    LaunchedEffect(exportMsg) {
-        if (exportMsg != null) {
-            Toast.makeText(context, exportMsg, Toast.LENGTH_LONG).show()
-            viewModel.clearExportMessage()
-        }
-    }
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember { mutableStateOf("All") }
     
     // Manual registration visibility
     var showManualRegisterForm by remember { mutableStateOf(false) }
-    var showPdfPeriodDialog by remember { mutableStateOf(false) }
     
     // New Stock Registration Variables
     var newName by remember { mutableStateOf("") }
@@ -405,102 +395,6 @@ fun InventoryDashboardScreen(
                 }
             }
 
-            // 3. Document Extraction Suite (Enterprise PDF / CSV exports)
-            item {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = DynamicCardSecondary
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "ENTERPRISE DOCUMENT EXPORT ENGINE",
-                            fontFamily = FontFamily.SansSerif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = NeonCyan,
-                            letterSpacing = 0.5.sp
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // CSV Button (Distinct Outlined/Glass component with crisp vector icons)
-                            Button(
-                                onClick = { viewModel.triggerCsvExport(context) },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = GlassWhite
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .border(1.dp, NeonCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
-                                contentPadding = PaddingValues(horizontal = 12.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowUpward,
-                                        contentDescription = "Export CSV",
-                                        tint = NeonCyan,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "Export CSV",
-                                        fontFamily = FontFamily.SansSerif,
-                                        fontSize = 12.sp,
-                                        color = NeonCyan,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-
-                            // PDF Button (Distinct high contrast component with down-arrow)
-                            Button(
-                                onClick = { showPdfPeriodDialog = true },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = NeonCyan
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDownward,
-                                        contentDescription = "Render PDF",
-                                        tint = OnNeonCyan,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "Render PDF",
-                                        fontFamily = FontFamily.SansSerif,
-                                        fontSize = 12.sp,
-                                        color = OnNeonCyan,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // 4. Manual Add Form Overlay Drawer
             item {
                 AnimatedVisibility(
@@ -806,50 +700,6 @@ fun InventoryDashboardScreen(
             }
         }
 
-        if (showPdfPeriodDialog) {
-            AlertDialog(
-                onDismissRequest = { showPdfPeriodDialog = false },
-                containerColor = DynamicCardBackground,
-                title = {
-                    Text("PDF Report Extraction", color = GlassTextPrimary, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold)
-                },
-                text = {
-                    Column {
-                        Text("Select a specialized period to construct a targeted report inclusive of Audit Transaction logs within that timeframe.", color = GlassTextSecondary, fontSize = 13.sp)
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = { 
-                                viewModel.triggerPdfExport(context, 7)
-                                showPdfPeriodDialog = false 
-                            }, 
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
-                        ) { Text("Last 7 Days Activity", color = NeonCyan) }
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { 
-                                viewModel.triggerPdfExport(context, 30)
-                                showPdfPeriodDialog = false 
-                            }, 
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
-                        ) { Text("Last 30 Days Monthly", color = NeonCyan) }
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { 
-                                viewModel.triggerPdfExport(context, null)
-                                showPdfPeriodDialog = false 
-                            }, 
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
-                        ) { Text("Master Enterprise All-Time", color = Color.White, fontWeight = FontWeight.Bold) }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showPdfPeriodDialog = false }) { Text("Cancel", color = AccentGreen) }
-                }
-            )
-        }
     }
 }
 
