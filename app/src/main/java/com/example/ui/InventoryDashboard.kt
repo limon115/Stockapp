@@ -119,6 +119,7 @@ fun InventoryDashboardScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 1. Sleek Frosted Title Banner

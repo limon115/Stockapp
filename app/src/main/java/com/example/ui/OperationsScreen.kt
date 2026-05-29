@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,10 +53,13 @@ fun OperationsScreen(
         }
     }
 
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         GlassHeader(
@@ -221,6 +226,7 @@ fun OperationsScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(100.dp))
     }
 
     if (showStockInDialog) {
@@ -379,7 +385,7 @@ fun OperationsScreen(
                             onDismissRequest = { expanded = false },
                             modifier = Modifier.background(DynamicMenuBackground)
                         ) {
-                            items.take(100).forEach { item ->
+                            items.take(20).forEach { item ->
                                 DropdownMenuItem(
                                     text = { Text("${item.name} (${item.currentStock} in stock)", color = GlassTextPrimary) },
                                     onClick = {

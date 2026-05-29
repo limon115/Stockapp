@@ -400,7 +400,7 @@ fun SettingsScreen(
         }
 
         // 4. Attribution / Footer
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
         
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -422,5 +422,6 @@ fun SettingsScreen(
                 color = GlassTextSecondary.copy(alpha = 0.5f)
             )
         }
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }

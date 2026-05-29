@@ -320,6 +320,7 @@ fun HistoricalGraphScreen(
             color = Color(0x44FFFFFF),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
@@ -555,7 +556,7 @@ fun BarChartCanvas(
             val yPx = height - paddingBottom - barHeight
             
             drawRect(
-                color = color.copy(alpha = 0.85f * animatedProgress.value),
+                color = color.copy(alpha = (0.85f * animatedProgress.value).coerceIn(0f, 1f)),
                 topLeft = Offset(xPx, yPx),
                 size = Size(barWidth, barHeight)
             )

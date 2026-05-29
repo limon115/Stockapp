@@ -96,7 +96,6 @@ fun MainLayoutScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             // Elegant Slide / Dissolve transition on Screen Switches
             AnimatedContent(

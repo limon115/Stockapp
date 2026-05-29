@@ -44,8 +44,8 @@ fun Modifier.glassmorphic(
         .background(
             Brush.verticalGradient(
                 colors = listOf(
-                    glassWhite.copy(alpha = 0.15f),
-                    glassWhiteSubtle.copy(alpha = 0.05f)
+                    glassWhite.copy(alpha = 0.10f),
+                    glassWhiteSubtle.copy(alpha = 0.02f)
                 )
             )
         )
@@ -56,8 +56,8 @@ fun Modifier.glassmorphic(
             } else {
                 Brush.verticalGradient(
                     colors = listOf(
-                        glassBorderColor,
-                        Color(0x0AFFFFFF)
+                        glassBorderColor.copy(alpha = 0.4f),
+                        Color(0x05FFFFFF)
                     )
                 )
             },
