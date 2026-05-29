@@ -374,10 +374,10 @@ fun InventoryDashboardScreen(
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0x1B00E5FF)),
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                            shape = RoundedCornerShape(6.dp),
+                                            shape = androidx.compose.foundation.shape.CircleShape,
                                             modifier = Modifier
                                                 .height(28.dp)
-                                                .border(0.5.dp, NeonCyan.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                                                .border(0.5.dp, NeonCyan.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
                                         ) {
                                             Text(
                                                 text = "RESTOCK +10",
@@ -581,7 +581,7 @@ fun InventoryDashboardScreen(
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = androidx.compose.foundation.shape.CircleShape
                             ) {
                                 Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = OnNeonCyan, fontWeight = FontWeight.Bold)
                             }

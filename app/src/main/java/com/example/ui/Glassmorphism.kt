@@ -30,21 +30,22 @@ import com.example.ui.theme.GlassWhiteSubtle
 import com.example.ui.theme.NeonCyan
 
 fun Modifier.glassmorphic(
-    cornerRadius: Dp = 16.dp,
+    cornerRadius: Dp = 24.dp,
     borderWidth: Dp = 1.dp,
-    borderColor: Color? = null
+    borderColor: Color? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(cornerRadius)
 ): Modifier = this.composed {
     val glassWhite = GlassWhite
     val glassWhiteSubtle = GlassWhiteSubtle
     val glassBorderColor = GlassBorderColor
 
     this
-        .clip(RoundedCornerShape(cornerRadius))
+        .clip(shape)
         .background(
             Brush.verticalGradient(
                 colors = listOf(
-                    glassWhite,
-                    glassWhiteSubtle
+                    glassWhite.copy(alpha = 0.15f),
+                    glassWhiteSubtle.copy(alpha = 0.05f)
                 )
             )
         )
@@ -60,21 +61,22 @@ fun Modifier.glassmorphic(
                     )
                 )
             },
-            shape = RoundedCornerShape(cornerRadius)
+            shape = shape
         )
 }
 
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 16.dp,
+    cornerRadius: Dp = 24.dp,
     borderWidth: Dp = 1.dp,
     borderColor: Color? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(cornerRadius),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .glassmorphic(cornerRadius, borderWidth, borderColor)
+            .glassmorphic(cornerRadius, borderWidth, borderColor, shape)
             .padding(16.dp),
         content = content
     )
