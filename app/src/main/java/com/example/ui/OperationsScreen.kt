@@ -73,13 +73,14 @@ fun OperationsScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // STOCK IN BUTTON
-            ElevatedCard(
+            GlassCard(
                 modifier = Modifier
                     .weight(1f)
                     .height(150.dp)
                     .clickable { showStockInDialog = true },
-                colors = CardDefaults.elevatedCardColors(containerColor = DynamicCardSecondary),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                cornerRadius = 16.dp,
+                borderWidth = 0.5.dp,
+                borderColor = AccentGreen.copy(alpha = 0.3f)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -102,13 +103,14 @@ fun OperationsScreen(
             }
 
             // STOCK OUT BUTTON
-            ElevatedCard(
+            GlassCard(
                 modifier = Modifier
                     .weight(1f)
                     .height(150.dp)
                     .clickable { showStockOutDialog = true },
-                colors = CardDefaults.elevatedCardColors(containerColor = DynamicCardSecondary),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                cornerRadius = 16.dp,
+                borderWidth = 0.5.dp,
+                borderColor = AccentRed.copy(alpha = 0.3f)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -134,12 +136,11 @@ fun OperationsScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         // 3. Document Extraction Suite (Enterprise PDF / CSV exports)
-        ElevatedCard(
+        GlassCard(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = DynamicCardSecondary
-            ),
-            shape = RoundedCornerShape(16.dp)
+            cornerRadius = 16.dp,
+            borderWidth = 0.5.dp,
+            borderColor = NeonCyan.copy(alpha = 0.3f)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
@@ -325,8 +326,10 @@ fun OperationsScreen(
                         }
                         showStockInDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)
-                ) { Text("Confirm", color = Color.White) }
+                    modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = AccentGreen.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) { Text("Confirm", color = AccentGreen, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showStockInDialog = false }) { Text("Cancel", color = GlassTextSecondary) }
@@ -438,8 +441,10 @@ fun OperationsScreen(
                         Toast.makeText(context, "Stock deducted", Toast.LENGTH_SHORT).show()
                         showStockOutDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
-                ) { Text("Confirm", color = Color.White) }
+                    modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = AccentRed.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) { Text("Confirm", color = AccentRed, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showStockOutDialog = false }) { Text("Cancel", color = GlassTextSecondary) }
@@ -463,8 +468,11 @@ fun OperationsScreen(
                             viewModel.triggerPdfExport(context, 7)
                             showPdfPeriodDialog = false 
                         }, 
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.3f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues()
                     ) { Text("Last 7 Days Activity", color = NeonCyan) }
                     Spacer(Modifier.height(8.dp))
                     Button(
@@ -472,8 +480,11 @@ fun OperationsScreen(
                             viewModel.triggerPdfExport(context, 30)
                             showPdfPeriodDialog = false 
                         }, 
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = DynamicCardSecondary)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.3f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues()
                     ) { Text("Last 30 Days Monthly", color = NeonCyan) }
                     Spacer(Modifier.height(8.dp))
                     Button(
@@ -481,9 +492,12 @@ fun OperationsScreen(
                             viewModel.triggerPdfExport(context, null)
                             showPdfPeriodDialog = false 
                         }, 
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue)
-                    ) { Text("Master Enterprise All-Time", color = Color.White, fontWeight = FontWeight.Bold) }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        contentPadding = PaddingValues()
+                    ) { Text("Master Enterprise All-Time", color = GlassTextPrimary, fontWeight = FontWeight.Bold) }
                 }
             },
             confirmButton = {

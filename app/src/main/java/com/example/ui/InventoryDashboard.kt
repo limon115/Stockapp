@@ -373,12 +373,12 @@ fun InventoryDashboardScreen(
                                             onClick = {
                                                 viewModel.adjustStock(lowItem.itemId, 10, "IN")
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0x1B00E5FF)),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                             shape = androidx.compose.foundation.shape.CircleShape,
                                             modifier = Modifier
                                                 .height(28.dp)
-                                                .border(0.5.dp, NeonCyan.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
+                                                .glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.5f))
                                         ) {
                                             Text(
                                                 text = "RESTOCK +10",
@@ -503,7 +503,8 @@ fun InventoryDashboardScreen(
                                 Button(
                                     onClick = { fetchAiSuggestions(newName) },
                                     enabled = !isSuggestionsLoading && newName.isNotBlank(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                                    modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.3f)),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                                     contentPadding = PaddingValues(horizontal = 12.dp)
                                 ) {
                                     Icon(Icons.Default.AutoAwesome, contentDescription = "AI Suggest Detail", modifier = Modifier.size(16.dp))
@@ -580,11 +581,13 @@ fun InventoryDashboardScreen(
                                         showManualRegisterForm = false
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = NeonCyan.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                                 shape = androidx.compose.foundation.shape.CircleShape
                             ) {
-                                Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = OnNeonCyan, fontWeight = FontWeight.Bold)
+                                Text("REGISTER PRODUCT", fontFamily = FontFamily.SansSerif, color = NeonCyan, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -630,20 +633,19 @@ fun InventoryDashboardScreen(
                         },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = DynamicCardSecondary,
-                            unfocusedContainerColor = DynamicMenuBackground,
-                            disabledContainerColor = DynamicMenuBackground,
-                            focusedIndicatorColor = NeonCyan,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             focusedTextColor = GlassTextPrimary,
                             unfocusedTextColor = GlassTextPrimary,
                             cursorColor = NeonCyan
                         ),
-                        shape = RoundedCornerShape(24.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
-                            .border(1.dp, NeonCyan.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+                            .glassmorphic(cornerRadius = 24.dp, borderWidth = 1.dp, borderColor = NeonCyan.copy(alpha = if (searchQuery.isNotEmpty()) 0.5f else 0.2f))
                     )
                 }
             }
@@ -669,7 +671,7 @@ fun InventoryDashboardScreen(
                 ) { log ->
                     AuditLogRow(
                         log = log,
-                        modifier = Modifier
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
             }
@@ -961,7 +963,8 @@ fun InventoryItemRow(
                     Text("CANCEL", fontFamily = FontFamily.SansSerif, color = GlassTextSecondary)
                 }
             },
-            containerColor = DynamicCardSecondary
+            modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 1.dp, borderColor = GlassBorderColor),
+            containerColor = Color.Transparent
         )
     }
 }
@@ -976,9 +979,10 @@ fun AuditLogRow(
     val qtySign = if (isOut) "-" else "+"
 
     GlassCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(0.5.dp, color.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+        modifier = modifier.fillMaxWidth(),
+        cornerRadius = 16.dp,
+        borderWidth = 0.5.dp,
+        borderColor = color.copy(alpha = 0.3f)
     ) {
         Column {
             Row(
