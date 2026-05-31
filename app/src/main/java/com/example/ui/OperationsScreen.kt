@@ -227,6 +227,31 @@ fun OperationsScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 4. Mechanical Calculator
+        GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            cornerRadius = 16.dp,
+            borderWidth = 0.5.dp,
+            borderColor = NeonCyan.copy(alpha = 0.3f)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "HARDWARE CALCULATOR",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = NeonCyan,
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                SkeuomorphicCalculator()
+            }
+        }
+        
         Spacer(modifier = Modifier.height(100.dp))
     }
 
