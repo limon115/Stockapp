@@ -65,12 +65,12 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             )
     }
 
-    fun addItem(name: String, sku: String, initialStock: Int, category: String, cost: Double, lowStockThreshold: Int = 2, onCompleted: (Long) -> Unit) {
+    fun addItem(name: String, sku: String, initialStock: Int, category: String, cost: Double, lowStockThreshold: Int = 2, timestamp: Long = System.currentTimeMillis(), onCompleted: (Long) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val existing = repository.getItemBySku(sku)
             if (existing != null) {
                 // If item matches SKU, adjust its stock instead
-                repository.adjustStock(existing.itemId, initialStock, "IN")
+                repository.adjustStock(existing.itemId, initialStock, "IN", timestamp = timestamp)
                 launch(Dispatchers.Main) { onCompleted(existing.itemId) }
             } else {
                 val item = InventoryItem(
@@ -92,7 +92,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                         quantityChanged = initialStock,
                         stockValue = cost * initialStock,
                         details = "Initial stock registration",
-                        timestamp = System.currentTimeMillis()
+                        timestamp = timestamp
                     )
                     repository.insertAuditLog(logEntry)
                 }
@@ -123,9 +123,9 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String, details: String = "Stock adjustment", overrideValue: Double? = null) {
+    fun adjustStock(itemId: Long, quantityChanged: Int, transactionType: String, details: String = "Stock adjustment", overrideValue: Double? = null, timestamp: Long = System.currentTimeMillis()) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.adjustStock(itemId, quantityChanged, transactionType, details, overrideValue)
+            repository.adjustStock(itemId, quantityChanged, transactionType, details, overrideValue, timestamp)
         }
     }
 

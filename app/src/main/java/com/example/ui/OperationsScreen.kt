@@ -2,6 +2,9 @@
 package com.example.ui
 
 import android.widget.Toast
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import java.util.Calendar
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,6 +36,9 @@ import androidx.compose.ui.unit.sp
 import com.example.data.InventoryItem
 import com.example.ui.theme.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun OperationsScreen(
@@ -41,8 +47,27 @@ fun OperationsScreen(
 ) {
     val context = LocalContext.current
     var showStockInDialog by remember { mutableStateOf(false) }
+    var showStockInChoiceDialog by remember { mutableStateOf(false) }
+    var showRestockDialog by remember { mutableStateOf(false) }
     var showStockOutDialog by remember { mutableStateOf(false) }
     var showPdfPeriodDialog by remember { mutableStateOf(false) }
+
+    var stockInDate by remember { mutableStateOf("") }
+    var stockInTime by remember { mutableStateOf("") }
+    
+    var stockOutDate by remember { mutableStateOf("") }
+    var stockOutTime by remember { mutableStateOf("") }
+
+    var showCustomCategoryDialog by remember { mutableStateOf(false) }
+    var customCategories by remember { mutableStateOf(listOf<String>()) }
+    
+    // Hoisted states for Stock In dialog to prevent data loss when switching to custom category dialog
+    var stockInProductName by remember { mutableStateOf("") }
+    var stockInCategory by remember { mutableStateOf("") }
+    var stockInCategoryExpanded by remember { mutableStateOf(false) }
+    var stockInDetails by remember { mutableStateOf("") }
+    var stockInValueStr by remember { mutableStateOf("") }
+    var stockInQuantityStr by remember { mutableStateOf("") }
 
     val exportMsg by viewModel.exportMessage.collectAsState()
 
@@ -77,7 +102,9 @@ fun OperationsScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(150.dp)
-                    .clickable { showStockInDialog = true },
+                    .clickable { 
+                        showStockInChoiceDialog = true 
+                    },
                 cornerRadius = 16.dp,
                 borderWidth = 0.5.dp,
                 borderColor = AccentGreen.copy(alpha = 0.3f)
@@ -107,7 +134,12 @@ fun OperationsScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(150.dp)
-                    .clickable { showStockOutDialog = true },
+                    .clickable { 
+                        val now = Date()
+                        stockOutDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
+                        stockOutTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(now)
+                        showStockOutDialog = true 
+                    },
                 cornerRadius = 16.dp,
                 borderWidth = 0.5.dp,
                 borderColor = AccentRed.copy(alpha = 0.3f)
@@ -256,22 +288,23 @@ fun OperationsScreen(
     }
 
     if (showStockInDialog) {
-        var productName by remember { mutableStateOf("") }
-        var category by remember { mutableStateOf("") }
-        var details by remember { mutableStateOf("") }
-        var valueStr by remember { mutableStateOf("") }
-        var quantityStr by remember { mutableStateOf("") }
-
-        val existingItem = remember(productName, items) { 
-            items.find { it.name.equals(productName.trim(), ignoreCase = true) } 
+        val availableCategories = remember(items, customCategories) {
+            val all = mutableSetOf("Chemical", "Electronic", "General")
+            all.addAll(customCategories)
+            items.forEach { all.add(it.category) }
+            all.toList().sorted()
         }
 
-        LaunchedEffect(quantityStr, existingItem) {
+        val existingItem = remember(stockInProductName, items) { 
+            items.find { it.name.equals(stockInProductName.trim(), ignoreCase = true) } 
+        }
+
+        LaunchedEffect(stockInQuantityStr, existingItem) {
             if (existingItem != null) {
-                val qty = quantityStr.toIntOrNull() ?: 0
+                val qty = stockInQuantityStr.toIntOrNull() ?: 0
                 if (qty > 0) {
                     val totalValue = qty * existingItem.cost
-                    valueStr = String.format(java.util.Locale.US, "%.2f", totalValue)
+                    stockInValueStr = String.format(java.util.Locale.US, "%.2f", totalValue)
                 }
             }
         }
@@ -282,69 +315,190 @@ fun OperationsScreen(
             title = { Text("Stock In", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockInDate,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Date (yyyy-MM-dd)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        stockInDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            })
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockInTime,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Time (hh:mm a)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                TimePickerDialog(
+                                    context,
+                                    { _, hourOfDay, minute ->
+                                        val amPm = if (hourOfDay >= 12) "PM" else "AM"
+                                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+                                        stockInTime = String.format(Locale.getDefault(), "%02d:%02d %s", hour, minute, amPm)
+                                    },
+                                    calendar.get(Calendar.HOUR_OF_DAY),
+                                    calendar.get(Calendar.MINUTE),
+                                    false
+                                ).show()
+                            })
+                        }
+                    }
                     OutlinedTextField(
-                        value = productName,
-                        onValueChange = { productName = it },
+                        value = stockInProductName,
+                        onValueChange = { stockInProductName = it },
                         label = { Text("Product Name") },
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockInCategory,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = true,
+                                label = { Text("Category") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                ),
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = if (stockInCategoryExpanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                        contentDescription = "Dropdown"
+                                    )
+                                }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(Color.Transparent)
+                                    .clickable { stockInCategoryExpanded = !stockInCategoryExpanded }
+                            )
+                        }
+                        IconButton(
+                            onClick = { 
+                                showStockInDialog = false
+                                showCustomCategoryDialog = true 
+                            },
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AccentGreen.copy(alpha = 0.2f))
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add custom category", tint = AccentGreen)
+                        }
+                    }
+                    if (stockInCategoryExpanded) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 150.dp)
+                                .background(DynamicMenuBackground, RoundedCornerShape(8.dp))
+                                .border(1.dp, GlassBorderColor, RoundedCornerShape(8.dp))
+                                .padding(8.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            availableCategories.forEach { cat ->
+                                Text(
+                                    text = cat,
+                                    color = GlassTextPrimary,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            stockInCategory = cat
+                                            stockInCategoryExpanded = false
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
+                                )
+                                HorizontalDivider(color = GlassBorderColor.copy(alpha = 0.5f))
+                            }
+                        }
+                    }
                     OutlinedTextField(
-                        value = category,
-                        onValueChange = { category = it },
-                        label = { Text("Category") },
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
-                    )
-                    OutlinedTextField(
-                        value = details,
-                        onValueChange = { details = it },
+                        value = stockInDetails,
+                        onValueChange = { stockInDetails = it },
                         label = { Text("Details (What is stock for)") },
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                     OutlinedTextField(
-                        value = valueStr,
-                        onValueChange = { valueStr = it },
+                        value = stockInValueStr,
+                        onValueChange = { stockInValueStr = it },
                         label = { Text("Stock Value (Total)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                     OutlinedTextField(
-                        value = quantityStr,
-                        onValueChange = { quantityStr = it },
+                        value = stockInQuantityStr,
+                        onValueChange = { stockInQuantityStr = it },
                         label = { Text("Stock Quantity") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val qty = quantityStr.toIntOrNull() ?: 0
-                        val v = valueStr.toDoubleOrNull() ?: 0.0
-                        if (productName.isBlank() || qty <= 0) {
+                        val qty = stockInQuantityStr.toIntOrNull() ?: 0
+                        val v = stockInValueStr.toDoubleOrNull() ?: 0.0
+                        if (stockInProductName.isBlank() || qty <= 0) {
                             Toast.makeText(context, "Invalid input", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         
                         // Check if item exists by name
-                        val existingItem = items.find { it.name.equals(productName.trim(), ignoreCase = true) }
+                        val timestamp = try {
+                            val format = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault())
+                            format.parse("$stockInDate $stockInTime")?.time ?: System.currentTimeMillis()
+                        } catch (e: Exception) {
+                            System.currentTimeMillis()
+                        }
+
+                        val existingItem = items.find { it.name.equals(stockInProductName.trim(), ignoreCase = true) }
                         if (existingItem != null) {
                             viewModel.adjustStock(
                                 itemId = existingItem.itemId,
                                 quantityChanged = qty,
                                 transactionType = "IN",
-                                details = details,
-                                overrideValue = v
+                                details = stockInDetails,
+                                overrideValue = v,
+                                timestamp = timestamp
                             )
                             Toast.makeText(context, "Stock updated", Toast.LENGTH_SHORT).show()
                         } else {
                             viewModel.addItem(
-                                name = productName.trim(),
+                                name = stockInProductName.trim(),
                                 sku = "NAME-${System.currentTimeMillis().toString().takeLast(6)}",
                                 initialStock = qty,
-                                category = category.trim().ifBlank { "General" },
+                                category = stockInCategory.trim().ifBlank { "General" },
                                 cost = v / qty.toDouble(),
-                                lowStockThreshold = 2
+                                lowStockThreshold = 2,
+                                timestamp = timestamp
                             ) {
                                 Toast.makeText(context, "New stock added", Toast.LENGTH_SHORT).show()
                             }
@@ -358,6 +512,244 @@ fun OperationsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStockInDialog = false }) { Text("Cancel", color = GlassTextSecondary) }
+            }
+        )
+    }
+
+    if (showStockInChoiceDialog) {
+        AlertDialog(
+            onDismissRequest = { showStockInChoiceDialog = false },
+            title = { Text("Stock In Options", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("Are you registering new stock for a new product or restocking an existing one?", color = GlassTextSecondary) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val now = Date()
+                        val calendar = Calendar.getInstance()
+                        calendar.time = now
+                        stockInDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH))
+                        
+                        val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+                        val amPm = if (hourOfDay >= 12) "PM" else "AM"
+                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+                        stockInTime = String.format(Locale.getDefault(), "%02d:%02d %s", hour, calendar.get(Calendar.MINUTE), amPm)
+                        
+                        showStockInChoiceDialog = false
+                        showStockInDialog = true
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)
+                ) {
+                    Text("New Stock")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        val now = Date()
+                        val calendar = Calendar.getInstance()
+                        calendar.time = now
+                        stockInDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH))
+                        
+                        val hourOfDay = calendar.get(Calendar.HOUR_OF_DAY)
+                        val amPm = if (hourOfDay >= 12) "PM" else "AM"
+                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+                        stockInTime = String.format(Locale.getDefault(), "%02d:%02d %s", hour, calendar.get(Calendar.MINUTE), amPm)
+                        
+                        showStockInChoiceDialog = false
+                        showRestockDialog = true
+                    },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = GlassTextPrimary)
+                ) {
+                    Text("Restock Old Entry")
+                }
+            },
+            containerColor = DynamicCardBackground
+        )
+    }
+
+    if (showRestockDialog) {
+        var expanded by remember { mutableStateOf(false) }
+        var selectedItem by remember { mutableStateOf<InventoryItem?>(null) }
+        var details by remember { mutableStateOf("Restock") }
+        var valueStr by remember { mutableStateOf("") }
+        var quantityStr by remember { mutableStateOf("") }
+        
+        LaunchedEffect(quantityStr, selectedItem) {
+            if (selectedItem != null) {
+                val qty = quantityStr.toIntOrNull() ?: 0
+                if (qty > 0) {
+                    val totalValue = qty * selectedItem!!.cost
+                    valueStr = String.format(java.util.Locale.US, "%.2f", totalValue)
+                } else {
+                    valueStr = ""
+                }
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = { showRestockDialog = false },
+            containerColor = DynamicCardBackground,
+            title = { Text("Restock Entry", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockInDate,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Date (yyyy-MM-dd)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        stockInDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            })
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockInTime,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Time (hh:mm a)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                TimePickerDialog(
+                                    context,
+                                    { _, hourOfDay, minute ->
+                                        val amPm = if (hourOfDay >= 12) "PM" else "AM"
+                                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+                                        stockInTime = String.format(Locale.getDefault(), "%02d:%02d %s", hour, minute, amPm)
+                                    },
+                                    calendar.get(Calendar.HOUR_OF_DAY),
+                                    calendar.get(Calendar.MINUTE),
+                                    false
+                                ).show()
+                            })
+                        }
+                    }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = selectedItem?.name ?: "Select Product",
+                            onValueChange = {},
+                            readOnly = true,
+                            enabled = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            ),
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = if (expanded) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                                    contentDescription = "Dropdown"
+                                )
+                            }
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(Color.Transparent)
+                                .clickable { expanded = !expanded }
+                        )
+                    }
+                    
+                    if (expanded) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 150.dp)
+                                .background(DynamicMenuBackground, RoundedCornerShape(8.dp))
+                                .border(1.dp, GlassBorderColor, RoundedCornerShape(8.dp))
+                                .padding(8.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            items.take(20).forEach { item ->
+                                Text(
+                                    text = "${item.name} (${item.currentStock} in stock)",
+                                    color = GlassTextPrimary,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedItem = item
+                                            expanded = false
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
+                                )
+                                HorizontalDivider(color = GlassBorderColor.copy(alpha = 0.5f))
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = quantityStr,
+                        onValueChange = { quantityStr = it },
+                        label = { Text("Stock In Quantity") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                    )
+                    OutlinedTextField(
+                        value = details,
+                        onValueChange = { details = it },
+                        label = { Text("Details (What is stock for)") },
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                    )
+                    OutlinedTextField(
+                        value = valueStr,
+                        onValueChange = { valueStr = it },
+                        label = { Text("Added Stock Value") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val qty = quantityStr.toIntOrNull() ?: 0
+                        val v = valueStr.toDoubleOrNull() ?: 0.0
+                        if (selectedItem == null || qty <= 0) {
+                            Toast.makeText(context, "Invalid input", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        
+                        val timestamp = try {
+                            val format = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault())
+                            format.parse("$stockInDate $stockInTime")?.time ?: System.currentTimeMillis()
+                        } catch (e: Exception) {
+                            System.currentTimeMillis()
+                        }
+
+                        viewModel.adjustStock(
+                            itemId = selectedItem!!.itemId,
+                            quantityChanged = qty,
+                            transactionType = "IN",
+                            details = details,
+                            overrideValue = v,
+                            timestamp = timestamp
+                        )
+                        Toast.makeText(context, "Restock successful", Toast.LENGTH_SHORT).show()
+                        showRestockDialog = false
+                    },
+                    modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = AccentGreen.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) { Text("Confirm", color = AccentGreen, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestockDialog = false }) { Text("Cancel", color = GlassTextSecondary) }
             }
         )
     }
@@ -387,6 +779,54 @@ fun OperationsScreen(
             title = { Text("Deduct Stock", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockOutDate,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Date (yyyy-MM-dd)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        stockOutDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            })
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = stockOutTime,
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Time (hh:mm a)") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            )
+                            Box(modifier = Modifier.matchParentSize().background(Color.Transparent).clickable {
+                                val calendar = Calendar.getInstance()
+                                TimePickerDialog(
+                                    context,
+                                    { _, hourOfDay, minute ->
+                                        val amPm = if (hourOfDay >= 12) "PM" else "AM"
+                                        val hour = if (hourOfDay % 12 == 0) 12 else hourOfDay % 12
+                                        stockOutTime = String.format(Locale.getDefault(), "%02d:%02d %s", hour, minute, amPm)
+                                    },
+                                    calendar.get(Calendar.HOUR_OF_DAY),
+                                    calendar.get(Calendar.MINUTE),
+                                    false
+                                ).show()
+                            })
+                        }
+                    }
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
                                 value = selectedItem?.name ?: "Select Product",
@@ -394,7 +834,7 @@ fun OperationsScreen(
                                 readOnly = true,
                                 enabled = true,
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = TextFieldDefaults.colors(
+                                colors = OutlinedTextFieldDefaults.colors(
                                     focusedContainerColor = Color.Transparent,
                                     unfocusedContainerColor = Color.Transparent
                                 ),
@@ -405,22 +845,34 @@ fun OperationsScreen(
                                 modifier = Modifier
                                     .matchParentSize()
                                     .background(Color.Transparent)
-                                    .clickable { expanded = true }
+                                    .clickable { expanded = !expanded }
                             )
                         }
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.background(DynamicMenuBackground)
-                        ) {
-                            items.take(20).forEach { item ->
-                                DropdownMenuItem(
-                                    text = { Text("${item.name} (${item.currentStock} in stock)", color = GlassTextPrimary) },
-                                    onClick = {
-                                        selectedItem = item
-                                        expanded = false
-                                    }
-                                )
+                        
+                        if (expanded) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 150.dp)
+                                    .background(DynamicMenuBackground, RoundedCornerShape(8.dp))
+                                    .border(1.dp, GlassBorderColor, RoundedCornerShape(8.dp))
+                                    .padding(8.dp)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                items.take(20).forEach { item ->
+                                    Text(
+                                        text = "${item.name} (${item.currentStock} in stock)",
+                                        color = GlassTextPrimary,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedItem = item
+                                                expanded = false
+                                            }
+                                            .padding(vertical = 12.dp, horizontal = 8.dp)
+                                    )
+                                    HorizontalDivider(color = GlassBorderColor.copy(alpha = 0.5f))
+                                }
                             }
                         }
                     
@@ -429,20 +881,20 @@ fun OperationsScreen(
                         onValueChange = { quantityStr = it },
                         label = { Text("Quantity to use") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                     OutlinedTextField(
                         value = details,
                         onValueChange = { details = it },
                         label = { Text("Details (What is stock used for)") },
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                     OutlinedTextField(
                         value = valueStr,
                         onValueChange = { valueStr = it },
                         label = { Text("Used Stock Value") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                        colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
                     )
                 }
             },
@@ -456,12 +908,20 @@ fun OperationsScreen(
                             return@Button
                         }
                         
+                        val timestamp = try {
+                            val format = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault())
+                            format.parse("$stockOutDate $stockOutTime")?.time ?: System.currentTimeMillis()
+                        } catch (e: Exception) {
+                            System.currentTimeMillis()
+                        }
+
                         viewModel.adjustStock(
                             itemId = selectedItem!!.itemId,
                             quantityChanged = qty,
                             transactionType = "OUT",
                             details = details,
-                            overrideValue = v
+                            overrideValue = v,
+                            timestamp = timestamp
                         )
                         Toast.makeText(context, "Stock deducted", Toast.LENGTH_SHORT).show()
                         showStockOutDialog = false
@@ -528,6 +988,51 @@ fun OperationsScreen(
             confirmButton = {
                 TextButton(onClick = { showPdfPeriodDialog = false }) { Text("Cancel", color = AccentGreen) }
             }
+        )
+    }
+
+    if (showCustomCategoryDialog) {
+        var newCategoryName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { 
+                showCustomCategoryDialog = false 
+                showStockInDialog = true
+            },
+            title = { Text("Add Custom Category", color = GlassTextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Category Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            customCategories = customCategories + newCategoryName.trim()
+                        }
+                        showCustomCategoryDialog = false
+                        showStockInDialog = true
+                    },
+                    modifier = Modifier.glassmorphic(cornerRadius = 24.dp, borderWidth = 0.5.dp, borderColor = AccentGreen.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Text("Add", color = AccentGreen, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showCustomCategoryDialog = false 
+                    showStockInDialog = true
+                }) { Text("Cancel", color = GlassTextSecondary) }
+            },
+            containerColor = DynamicCardBackground
         )
     }
 }

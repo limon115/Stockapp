@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -52,7 +53,18 @@ fun SkeuomorphicCalculator() {
                     "/" -> if (current != 0.0) operand / current else Double.NaN
                     else -> current
                 }
-                display = if (result % 1.0 == 0.0) result.toInt().toString() else result.toString()
+                
+                if (result.isNaN()) {
+                    display = "Error"
+                } else if (result.isInfinite()) {
+                    display = "∞"
+                } else {
+                    display = if (result % 1.0 == 0.0) {
+                        result.toLong().toString()
+                    } else {
+                        result.toString()
+                    }
+                }
                 operator = ""
                 startNew = true
             }
@@ -138,7 +150,7 @@ fun SkeuomorphicCalculator() {
                         text = btn,
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(1f),
+                            .height(72.dp),
                         onClick = { handleInput(btn) },
                         isAccent = btn == "=" || btn == "C",
                         isOperator = btn == "+" || btn == "-" || btn == "*" || btn == "/"
@@ -200,7 +212,10 @@ fun MechanicalButton(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = if (isPressed) 0.dp else 4.dp)
+                .padding(bottom = 4.dp)
+                .graphicsLayer {
+                    translationY = if (isPressed) 4.dp.toPx() else 0f
+                }
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(topColor, bottomColor)
